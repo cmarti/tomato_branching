@@ -113,8 +113,8 @@ if __name__ == "__main__":
     axes.set(
         yscale="log",
         xscale="log",
-        xlabel="PLT3 PLT7 branching events\nin $EJ2\ J2$ background",
-        ylabel="EJ2$^{pro}$ J2 branching events\nin $PLT3\ PLT7$ background",
+        xlabel="branching events in\n$EJ2\ J2$ background",
+        ylabel="branching events in\n$PLT3\ PLT7$ background",
         aspect="equal",
         xlim=(1e-2, 30),
         ylim=(1e-2, 30),
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     # Re-arrange and save figure
     fig.tight_layout(w_pad=0)
-    plt.show()
+
     fname = "figures/model_preds".format()
     fig.savefig("{}.png".format(fname), dpi=300)
     fig.savefig("{}.svg".format(fname))

@@ -54,51 +54,44 @@ if __name__ == "__main__":
 
     print("Constructing basis for regression")
     additive_basis = get_add_basis(plant_data)
-    pairwise_basis = get_pairwise_basis(plant_data).drop('PLT3_PLT7', axis=1)
+    pairwise_basis = get_pairwise_basis(plant_data).drop("PLT3_PLT7", axis=1)
     null_basis = np.ones((y.shape[0], 1))
     saturated_basis = get_saturated_basis(plant_data)
-    
-    # print('Storing pairwise basis')
-    # pairwise_basis['gt'] = plant_data['gt']
-    # pairwise_basis.to_csv('data/pairwise_basis.csv')
-    # pairwise_basis.drop('gt', axis=1)
 
+    print("Fitting Poisson linear")
+    data = pd.DataFrame({"obs_mean": plant_data["obs_mean"]})
     X_ext = additive_basis * np.expand_dims(exposure, 1)
-    data = {"obs": y / exposure, "n_plants": exposure}
+    results = sm.GLM(
+        y,
+        X_ext,
+        family=sm.families.Poisson(link=sm.families.links.Identity()),
+    ).fit()
+    data["poisson_linear"] = results.predict(X_ext)
+    results.save("results/poisson_linear_model.pkl")
 
-    # print("Fitting Poisson linear")
-    # results = sm.GLM(
-    #     y, X_ext, family=sm.families.Poisson(link=sm.families.links.Identity())
-    # ).fit()
-    # data["poisson_linear"] = results.predict(X_ext) / exposure
-    # results.save("results/model.poisson_linear.pkl")
+    print("Fitting Poisson log")
+    results = sm.GLM(
+        y,
+        additive_basis,
+        exposure=exposure,
+        family=sm.families.Poisson(),
+    ).fit()
+    results.save("results/poisson_log_model.pkl")
+    data["poisson_log"] = results.predict(additive_basis)
+    data.to_csv("results/plant_predictions.csv")
 
-    # print("Fitting Poisson log")
-    # results = sm.GLM(
-    #     y,
-    #     additive_basis,
-    #     exposure=exposure,
-    #     family=sm.families.Poisson(),
-    # ).fit()
-    # data["poisson_log"] = results.predict(additive_basis)
-    # results.save("results/model.poisson_log.pkl")
+    print("Fitting NB log")
+    results = fit_model(y, additive_basis, exposure)
+    data["nb_log"] = results.predict(additive_basis)
+    results.save("results/model.nb_log.pkl")
 
-    # print("Fitting NB log")
-    # results = fit_model(y, additive_basis, exposure)
-    # data["nb_log"] = results.predict(additive_basis)
-    # results.save("results/model.nb_log.pkl")
+    print("Fitting null model")
+    model = fit_model(y, null_basis, exposure)
+    model.save("results/null_model.pkl")
 
-    # print("Storing models predictions")
-    # data = pd.DataFrame(data)
-    # data.to_csv("results/basic_models_predictions.csv")
-
-    # print("Fitting null model")
-    # model = fit_model(y, null_basis, exposure)
-    # model.save("results/null_model.pkl")
-
-    # print("Fitting saturated model")
-    # model = fit_model(y, saturated_basis, exposure)
-    # model.save("results/saturated_model.pkl")
+    print("Fitting saturated model")
+    model = fit_model(y, saturated_basis, exposure)
+    model.save("results/saturated_model.pkl")
 
     subsets = {
         # "additive": additive_basis,

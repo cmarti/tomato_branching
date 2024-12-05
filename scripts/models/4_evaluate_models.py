@@ -5,7 +5,8 @@ import torch
 from statsmodels.iolib.smpickle import load_pickle
 from scripts.settings import SEASONS
 from scripts.utils import get_add_basis, get_pairwise_basis, get_saturated_basis
-from scripts.models.fit_multilinear_model import encode_data, MultilinearModel
+from scripts.models.multilinear_model import encode_data, MultilinearModel
+
 
 if __name__ == "__main__":
     cols = ["PLT3", "PLT7", "J2", "EJ2", "Season"]
@@ -23,7 +24,7 @@ if __name__ == "__main__":
         .set_index("gt")
     )
 
-    print("Building basis for predictions")
+    print("Building basis for genotype predictions")
     additive_basis = get_add_basis(gt_data)
     pairwise_basis = get_pairwise_basis(gt_data)
     saturated_basis = get_saturated_basis(gt_data)
@@ -48,7 +49,7 @@ if __name__ == "__main__":
         gt_data["{}_lower".format(label)] = estimates["Conf. Int. Low"].values
         gt_data["{}_upper".format(label)] = estimates["Conf. Int. Upp."].values
 
-        if label == "saturated":
+        if label in ["saturated", "poisson_linear", "poisson_log"]:
             continue
 
         model = load_pickle("results/{}_model.train.pkl".format(label))

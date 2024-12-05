@@ -29,30 +29,27 @@ def calc_dev_perc(model):
 
 
 if __name__ == "__main__":
-    null_model = load_pickle('results/null_model.pkl')
-    saturated_model = load_pickle('results/saturated_model.pkl')
-    
+    null_model = load_pickle("results/null_model.pkl")
+    saturated_model = load_pickle("results/saturated_model.pkl")
+
     null_ll = null_model.llf_scaled()
     saturated_ll = saturated_model.llf_scaled()
     null_deviance = 2 * (saturated_ll - null_ll)
-    
+
     print("== Comparing additive models at different scales")
-    print('Deviance of null model = {}'.format(null_deviance))
-    
-    poisson_linear = load_pickle("results/model.poisson_linear.pkl")
-    dev_perc = 100 * (1 - poisson_linear.deviance / poisson_linear.null_deviance)
-    print("\tPoisson linear % deviance explained = {:.2f}".format(dev_perc))
+    print("Deviance of null model = {}".format(null_deviance))
 
-    poisson_log = load_pickle("results/model.poisson_log.pkl")
+    poisson_linear = load_pickle("results/poisson_linear_model.pkl")
+    dev_perc = 100 * (
+        1 - poisson_linear.deviance / poisson_linear.null_deviance
+    )
+    print("Poisson linear % deviance explained = {:.2f}".format(dev_perc))
+
+    poisson_log = load_pickle("results/poisson_log_model.pkl")
     dev_perc = 100 * (1 - poisson_log.deviance / poisson_log.null_deviance)
-    print("\tPoisson log % deviance explained = {:.2f}".format(dev_perc))
+    print("Poisson log % deviance explained = {:.2f}".format(dev_perc))
 
-    nb_log = load_pickle("results/model.nb_log.pkl")
-    deviance = 2 * (saturated_ll - nb_log.llf_scaled())
-    dev_perc = 100 * (1 - deviance / null_deviance)
-    print("\tNB log % deviance explained = {:.2f}".format(dev_perc))
-
-    print("== Comparing additive and pairwise models == ")
+    print("== Comparing additive and pairwise NB models == ")
     additive_model = load_pickle("results/additive_model.pkl")
     deviance = 2 * (saturated_ll - additive_model.llf_scaled())
     additive_dev_perc = 100 * (1 - deviance / null_deviance)
@@ -64,28 +61,54 @@ if __name__ == "__main__":
     print("Pairwise % deviance explained = {:.2f}".format(pairwise_dev_perc))
 
     lr_test(pairwise_model, additive_model)
-    
-    print('== Reporting synergistic interactions ==')
-    pairwise_basis = pd.read_csv('data/pairwise_basis.csv', index_col=0).set_index('gt').drop_duplicates()
-    c = pd.DataFrame(np.zeros((4, pairwise_basis.shape[0])),
-                     columns=pairwise_basis.index,
-                     index=['PLT3h_PLT7', 'PLT3_PLT7h', 'J2h_EJ2(8)', 'J2_EJ2(8)h'])
-    c.loc['PLT3h_PLT7', ['W_W_W_W', 'H_W_W_W', 'W_M_W_W', 'H_M_W_W']] = [1, -1, -1, 1]
-    c.loc['PLT3_PLT7h', ['W_W_W_W', 'M_W_W_W', 'W_H_W_W', 'M_H_W_W']] = [1, -1, -1, 1]
-    c.loc['J2h_EJ2(8)', ['W_W_W_W', 'W_W_H_W', 'W_W_W_M8', 'W_W_H_M8']] = [1, -1, -1, 1]
-    c.loc['J2_EJ2(8)h', ['W_W_W_W', 'W_W_M_W', 'W_W_W_H8', 'W_W_M_H8']] = [1, -1, -1, 1]
+
+    print("== Reporting synergistic interactions ==")
+    pairwise_basis = (
+        pd.read_csv("data/pairwise_basis.csv", index_col=0)
+        .set_index("gt")
+        .drop_duplicates()
+    )
+    c = pd.DataFrame(
+        np.zeros((4, pairwise_basis.shape[0])),
+        columns=pairwise_basis.index,
+        index=["PLT3h_PLT7", "PLT3_PLT7h", "J2h_EJ2(8)", "J2_EJ2(8)h"],
+    )
+    c.loc["PLT3h_PLT7", ["W_W_W_W", "H_W_W_W", "W_M_W_W", "H_M_W_W"]] = [
+        1,
+        -1,
+        -1,
+        1,
+    ]
+    c.loc["PLT3_PLT7h", ["W_W_W_W", "M_W_W_W", "W_H_W_W", "M_H_W_W"]] = [
+        1,
+        -1,
+        -1,
+        1,
+    ]
+    c.loc["J2h_EJ2(8)", ["W_W_W_W", "W_W_H_W", "W_W_W_M8", "W_W_H_M8"]] = [
+        1,
+        -1,
+        -1,
+        1,
+    ]
+    c.loc["J2_EJ2(8)h", ["W_W_W_W", "W_W_M_W", "W_W_W_H8", "W_W_M_H8"]] = [
+        1,
+        -1,
+        -1,
+        1,
+    ]
     contrasts = c @ pairwise_basis
     results1 = pairwise_model.t_test(contrasts).summary_frame()
     results1.index = contrasts.index
-    
+
     contrasts = np.eye(pairwise_model.params.shape[0])
     results2 = pairwise_model.t_test(contrasts).summary_frame()
     results2.index = pairwise_model.params.index
     results2.to_csv("results/pairwise_model.coeffs.csv")
-    
-    coefs = ['J2_EJ2({})'.format(a) for a in EJ2_SERIES]
+
+    coefs = ["J2_EJ2({})".format(a) for a in EJ2_SERIES]
     results = pd.concat([results1, results2.loc[coefs, :]])
-    results['fold_change'] = np.exp(results['coef'])
+    results["fold_change"] = np.exp(results["coef"])
     print(results)
 
     pairwise = np.array(["_" in x for x in results2.index])
@@ -96,12 +119,11 @@ if __name__ == "__main__":
             nsig, ntotal
         )
     )
-    
-    print('== Multilinear model ==')
-    history = pd.read_csv('results/multilinear.history.csv')
-    ll = -history['loss'].values[-1]
-    
+
+    print("== Multilinear model ==")
+    history = pd.read_csv("results/multilinear.history.csv")
+    ll = -history["loss"].values[-1]
+
     deviance = 2 * (saturated_ll - ll)
     dev_perc = 100 * (1 - deviance / null_deviance)
-    print("\tMultilinear model % deviance explained = {:.2f}".format(dev_perc))
-    
+    print("Multilinear model % deviance explained = {:.2f}".format(dev_perc))
