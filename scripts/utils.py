@@ -837,7 +837,7 @@ def set_aspect(axes, xlabel=None, ylabel=None, add_diag=True):
         xlabel=xlabel,
     )
     set_log_ticks(axes)
-    axes.grid(alpha=0.2, lw=0.3)
+    # axes.grid(alpha=0.2, lw=0.3)
     if add_diag:
         axes.axline((1, 1), (2, 2), lw=0.3, c="grey", linestyle="--", alpha=0.5)
 

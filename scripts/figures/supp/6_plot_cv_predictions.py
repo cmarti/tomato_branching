@@ -34,6 +34,7 @@ def plot(df, axes, x, y, color="black", alpha=1, label=None):
         fontsize=7,
     )
     set_aspect(axes)
+    return(r2)
 
 
 if __name__ == "__main__":
@@ -57,12 +58,14 @@ if __name__ == "__main__":
         3, 5, figsize=(FIG_WIDTH, 0.65 * FIG_WIDTH), sharex=True, sharey=True
     )
 
-    models = ["additive", "pairwise", "bilinear"]
-    labels = {"bilinear": "multilinear"}
+    models = ["additive", "pairwise", "multilinear"]
+    labels = {}
     for model, row in zip(models, subplots):
+        r2s = []
         for season, axes in zip(SEASONS, row):
             df = gt_data.loc[seasons == season, :]
-            plot(df, axes, model, "saturated")
+            r2 = plot(df, axes, model, "saturated")
+            r2s.append(r2)
             axes.text(
                 0.95,
                 0.05,
@@ -72,6 +75,7 @@ if __name__ == "__main__":
                 va="bottom",
                 fontsize=7,
             )
+        print(model, np.mean(r2s))
 
         axes = row[-1]
         df = gt_data.loc[idx, :]

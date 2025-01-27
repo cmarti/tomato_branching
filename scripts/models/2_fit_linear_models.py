@@ -12,6 +12,31 @@ from scripts.utils import (
 )
 
 
+def fit_model_linear(y, X, exposure):
+    link = sm.families.links.Identity()
+    X_ext = X * np.expand_dims(exposure, 1)
+
+    def loss(alpha):
+        model = sm.GLM(
+            y,
+            X_ext,
+            family=sm.families.NegativeBinomial(alpha=alpha, link=link),
+        ).fit()
+        return -model.llf_scaled()
+
+    res = minimize(
+        loss, x0=0.3, method="nelder-mead", bounds=[(0, None)], tol=1e-2
+    )
+    alpha = res.x[0]
+    model = sm.GLM(
+        y,
+        X_ext,
+        family=sm.families.NegativeBinomial(alpha=alpha, link=link),
+    ).fit()
+    model.alpha = alpha
+    return model
+
+
 def fit_model(y, X, exposure):
     def loss(alpha):
         model = sm.GLM(
@@ -80,6 +105,10 @@ if __name__ == "__main__":
     data["poisson_log"] = results.predict(additive_basis)
     data.to_csv("results/plant_predictions.csv")
 
+    print("Fitting NB linear")
+    results = fit_model_linear(y, additive_basis, exposure)
+    results.save("results/model.nb_linear.pkl")
+
     print("Fitting NB log")
     results = fit_model(y, additive_basis, exposure)
     data["nb_log"] = results.predict(additive_basis)
@@ -89,9 +118,18 @@ if __name__ == "__main__":
     model = fit_model(y, null_basis, exposure)
     model.save("results/null_model.pkl")
 
-    print("Fitting saturated model")
+    print("Fitting saturated NB model")
     model = fit_model(y, saturated_basis, exposure)
     model.save("results/saturated_model.pkl")
+
+    print("Fitting saturated Poisson model")
+    results = sm.GLM(
+        y,
+        saturated_basis,
+        exposure=exposure,
+        family=sm.families.Poisson(),
+    ).fit()
+    results.save("results/saturated_poisson.pkl")
 
     subsets = {
         # "additive": additive_basis,

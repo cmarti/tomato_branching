@@ -96,6 +96,13 @@ class MultilinearModel(torch.nn.Module):
 
         self.init_params(n1=self.x1.shape[1], n2=self.x2.shape[1], alpha=alpha)
 
+    def init_params(self, n1, n2, alpha=None):
+        self.log_alpha = Parameter(torch.zeros(size=(1,)))
+        self.theta1_raw = Parameter(torch.normal(torch.zeros(size=(n1 - 1,))))
+        self.theta2_raw = Parameter(torch.normal(torch.zeros(size=(n2 - 1,))))
+        self.beta = Parameter(torch.normal(torch.zeros(size=(2,))))
+        self.n_params = n1 + n2 + 1
+
     def loglikelihood(self, yhat, counts, exposure):
         mean = yhat * exposure
         alpha = torch.exp(self.log_alpha)
@@ -104,8 +111,8 @@ class MultilinearModel(torch.nn.Module):
 
     def bilinear_function(self, f1, f2, beta):
         b0 = beta[0]
-        b1 = torch.exp(beta[1])
-        return b0 + f1 + f2 - b1 * f1 * f2
+        b = torch.exp(beta[1:])
+        return b0 + f1 + f2 - b[-1] * f1 * f2
 
     def x_to_mu(self, x1, x2):
         f1 = self.calc_f(x1, self.theta1)
@@ -138,6 +145,7 @@ class MultilinearModel(torch.nn.Module):
             # if i == 0:
             #     print(history[-1])
         self.history = history
+        self.llf = -history[-1]
 
     def summary(self, pred=None, obs=None):
         print("===========================")
@@ -154,17 +162,6 @@ class MultilinearModel(torch.nn.Module):
             print("log(x+1e-6) Pearson r = {:.2f}".format(r3))
             print("log(x+1e-2) Pearson r = {:.2f}".format(r2))
             print("log(x+1) Pearson r = {:.2f}".format(r1))
-
-    def init_params(self, n1, n2, alpha=None):
-        if alpha is None:
-            self.log_alpha = Parameter(torch.zeros(size=(1,)))
-        else:
-            self.log_alpha = Parameter(
-                torch.Tensor(np.log([alpha])), requires_grad=False
-            )
-        self.theta1_raw = Parameter(torch.normal(torch.zeros(size=(n1 - 1,))))
-        self.theta2_raw = Parameter(torch.normal(torch.zeros(size=(n2 - 1,))))
-        self.beta = Parameter(torch.normal(torch.zeros(size=(2,))))
 
     @property
     def theta1(self):
@@ -248,21 +245,13 @@ def prepare_data(plant_data):
 if __name__ == "__main__":
     n_iter = 10000
     lr = 0.01
-    
+
     # Load raw data
     plant_data = pd.read_csv("data/plant_data.csv", index_col=0)
     train = np.load("results/train_idx.npy")
     X0 = np.ones((plant_data.shape[0], 1))
     X = get_saturated_basis(plant_data).values
     x1, x2, y, exposure = prepare_data(plant_data)
-
-    print("Training model on 90% of the data")
-    model = MultilinearModel()
-    model.set_data(
-        x1.loc[train, :], x2.loc[train, :], y[train], exposure[train]
-    )
-    model.fit(n_iter=n_iter, lr=lr)
-    torch.save(model, "results/multilinear.train.pkl")
 
     print("Training model on 100% of the data")
     model = MultilinearModel()
@@ -272,6 +261,14 @@ if __name__ == "__main__":
 
     history = pd.DataFrame({"loss": model.history})
     history.to_csv("results/multilinear.history.csv")
+
+    print("Training model on 90% of the data")
+    model = MultilinearModel()
+    model.set_data(
+        x1.loc[train, :], x2.loc[train, :], y[train], exposure[train]
+    )
+    model.fit(n_iter=n_iter, lr=lr)
+    torch.save(model, "results/multilinear.train.pkl")
 
     for season in SEASONS:
         print("Leaving out season: {}".format(season))

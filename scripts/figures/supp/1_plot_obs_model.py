@@ -47,7 +47,7 @@ if __name__ == "__main__":
     print("Load genotype estimates data")
     gt_data = pd.read_csv("results/plant_predictions.csv")
 
-    axes = subplots[0][0]
+    axes = subplots[1][0]
     plot(gt_data, axes, x="poisson_linear")
     axes.set(
         xlabel="Predicted plant branching events",
@@ -59,13 +59,13 @@ if __name__ == "__main__":
     axes.text(
         -0.4,
         1.05,
-        "A",
+        "C",
         fontsize=12,
         fontweight="bold",
         transform=axes.transAxes,
     )
 
-    axes = subplots[0][1]
+    axes = subplots[1][1]
     plot(gt_data, axes, x="poisson_log")
     axes.set(
         xlabel="Predicted plant branching events",
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     axes.text(
         -0.4,
         1.05,
-        "B",
+        "D",
         fontsize=12,
         fontweight="bold",
         transform=axes.transAxes,
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     )
 
     # Plot genotype level predictions
-    axes = subplots[1][0]
+    axes = subplots[0][0]
     lims = (-2, 1e2)
     axes.scatter(
         plant_data["obs_mean"],
@@ -115,14 +115,14 @@ if __name__ == "__main__":
     axes.text(
         -0.4,
         1.05,
-        "C",
+        "A",
         fontsize=12,
         fontweight="bold",
         transform=axes.transAxes,
     )
 
     # Plot genotype level predictions
-    axes = subplots[1][1]
+    axes = subplots[0][1]
     lims = (-2, 1e2)
     axes.scatter(
         gt_data["mean"],
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     axes.text(
         -0.4,
         1.05,
-        "D",
+        "B",
         fontsize=12,
         fontweight="bold",
         transform=axes.transAxes,
