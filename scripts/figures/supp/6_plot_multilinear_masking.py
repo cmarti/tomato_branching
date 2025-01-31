@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 from itertools import combinations
 from scripts.settings import FIG_WIDTH
-from scripts.utils import set_aspect
 
 
 if __name__ == "__main__":
@@ -48,7 +47,6 @@ if __name__ == "__main__":
             x.endswith("W") or x.endswith(str(allele)) for x in pred_j2["EJ2"]
         ]
         df = pred_j2.loc[idx, :]
-        print(df)
         axes.scatter(
             df["x"],
             np.exp(df["multilinear_pred"]),
@@ -80,7 +78,6 @@ if __name__ == "__main__":
         if bc != "WW":
             axes.set(yticklabels=[])
 
-        axes.grid(alpha=0.2, lw=0.3)
         try:
             x, y = df.loc["WM{}".format(allele), ["x", "multilinear_pred"]]
             axes.text(
@@ -123,7 +120,6 @@ if __name__ == "__main__":
     # Re-arrange and save figure
     fig.tight_layout(w_pad=0.2, h_pad=-0.25)
 
-    fname = "figures/multilinear_model_supp2"
+    fname = "figures/FigureS8c"
     fig.savefig("{}.png".format(fname), dpi=600)
     fig.savefig("{}.svg".format(fname))
-    fig.savefig("{}.pdf".format(fname))

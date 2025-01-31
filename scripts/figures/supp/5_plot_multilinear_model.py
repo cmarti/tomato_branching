@@ -6,9 +6,7 @@ import torch
 
 from matplotlib.gridspec import GridSpec
 from itertools import combinations
-from scipy.stats import pearsonr
 from scripts.settings import FIG_WIDTH
-from scripts.utils import set_aspect
 from scripts.models.multilinear_model import MultilinearModel
 
 
@@ -236,7 +234,6 @@ if __name__ == "__main__":
     # Re-arrange and save figure
     fig.tight_layout(w_pad=0, h_pad=-0.25)
 
-    fname = "figures/multilinear_model_supp"
+    fname = "figures/FigureS8b"
     fig.savefig("{}.png".format(fname), dpi=600)
     fig.savefig("{}.svg".format(fname))
-    fig.savefig("{}.pdf".format(fname))

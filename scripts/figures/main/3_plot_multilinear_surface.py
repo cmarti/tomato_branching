@@ -1,15 +1,13 @@
 #!/usr/bin/env python
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import torch
-
-from matplotlib.ticker import LogLocator, LogFormatter
-from matplotlib.gridspec import GridSpec
 from scipy.stats import pearsonr
+
+from scripts.models.multilinear_model import MultilinearModel
 from scripts.settings import FIG_WIDTH
 from scripts.utils import set_aspect
-from scripts.models.multilinear_model import MultilinearModel
 
 
 def plot(df, axes, x, y, color="black", alpha=1, label=None):
@@ -65,7 +63,7 @@ def plot_line(axes, f1, f2, model, wt, linestyle="--"):
 
 if __name__ == "__main__":
     # Load data
-    print("Plotting effects of mutations across backgrounds")
+    print("Plotting surface representing the multilinear model")
     gt_data = pd.read_csv("results/genotype_predictions.csv", index_col=0)
     stderr = (gt_data["saturated_upper"] - gt_data["saturated_lower"]) / 2
     gt_data = gt_data.loc[stderr < 10, :]
@@ -192,7 +190,6 @@ if __name__ == "__main__":
     wt = values.loc["WWWW"]
     pred1 = values.loc["WWMW"] + (values.loc["WWWM8"] - values.loc["WWWW"])
     pred2 = values.loc["MWWW"] + (values.loc["WHWW"] - values.loc["WWWW"])
-    print(wt, pred1, np.exp(pred2))
 
     axes.scatter(
         pred1 / np.log(10),
@@ -213,14 +210,6 @@ if __name__ == "__main__":
         c="grey",
         lw=0,
         zorder=10,
-    )
-
-    v = np.exp(df)
-    print(
-        np.dot(
-            v.loc[["WWWW", "MHWW", "WWMM8", "MHMM8"], "multilinear_pred"],
-            [1, -1, -1, 1],
-        )
     )
 
     axes.xaxis.pane.set_facecolor((1.0, 1.0, 1.0, 0.0))  # Transparent
@@ -247,7 +236,6 @@ if __name__ == "__main__":
     # print(f"Elevation: {axes.elev}")
     # print(f"Azimuth: {axes.azim}")
 
-    fname = "figures/surface".format()
+    fname = "figures/Figure4G".format()
     fig.savefig("{}.png".format(fname), dpi=300)
     fig.savefig("{}.svg".format(fname))
-    fig.savefig("{}.pdf".format(fname))

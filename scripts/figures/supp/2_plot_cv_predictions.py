@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     # Re-arrange and save figure
     fig.tight_layout(w_pad=0.05, h_pad=0.15)
-    fname = "figures/FigureS9".format()
+    fname = "figures/FigureS5".format()
     # fig.savefig("{}.png".format(fname), dpi=300)
     # fig.savefig("{}.svg".format(fname))
     fig.savefig("{}.pdf".format(fname))

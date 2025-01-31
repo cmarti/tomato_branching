@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
-from matplotlib.ticker import LogLocator, LogFormatter
 from matplotlib.gridspec import GridSpec
 from scipy.stats import pearsonr
 from scripts.settings import FIG_WIDTH
@@ -146,11 +145,10 @@ if __name__ == "__main__":
     fig.subplots_adjust(wspace=0.5)
     # plt.show()
 
-    for axes in subplots:
-        print(f"Elevation: {axes.elev}")
-        print(f"Azimuth: {axes.azim}")
+    # for axes in subplots:
+    #     print(f"Elevation: {axes.elev}")
+    #     print(f"Azimuth: {axes.azim}")
 
-    fname = "figures/surfaces".format()
+    fname = "figures/FigureS8a".format()
     fig.savefig("{}.png".format(fname), dpi=300)
     fig.savefig("{}.svg".format(fname))
-    fig.savefig("{}.pdf".format(fname))

@@ -2,12 +2,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
 
 from scipy.stats import pearsonr
 from scripts.settings import FIG_WIDTH
 from scripts.utils import set_aspect
-from scripts.models.multilinear_model import MultilinearModel
 
 
 if __name__ == "__main__":
@@ -61,7 +59,6 @@ if __name__ == "__main__":
     # Re-arrange and save figure
     fig.tight_layout(w_pad=0)
 
-    fname = "figures/model_preds".format()
+    fname = "figures/Figure4F".format()
     fig.savefig("{}.png".format(fname), dpi=300)
     fig.savefig("{}.svg".format(fname))
-    fig.savefig("{}.pdf".format(fname))

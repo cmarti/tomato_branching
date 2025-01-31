@@ -72,11 +72,10 @@ if __name__ == "__main__":
     )
 
     axes = subplots[0, 0]
-    print(df)
     plot_phenotypes_scatter(df, axes, col="HW", ref="WW", color="black")
-    add_model_line(axes, theta1, gt="HW")
+    # add_model_line(axes, theta1, gt="HW")
     axes.set_ylabel("branching events in\n$plt3/+\ PLT7$ background")
-    axes.legend(loc=2)
+    # axes.legend(loc=2)
 
     gts = ["WW-Summer 22", "MW-Fall 22", "MM8-Summer 22"]
     dxs = [-0.3, -2.4, 0.4]
@@ -102,7 +101,7 @@ if __name__ == "__main__":
 
     axes = subplots[0, 1]
     plot_phenotypes_scatter(df, axes, col="MW", ref="WW", color="black")
-    add_model_line(axes, theta1, gt="MW")
+    # add_model_line(axes, theta1, gt="MW")
     axes.set_ylabel("branching events in\n$plt3\ PLT7$ background")
     axes.set_xlabel("branching events in $PLT3\ PLT7$ background")
 
@@ -132,7 +131,7 @@ if __name__ == "__main__":
 
     axes = subplots[0, 2]
     plot_phenotypes_scatter(df, axes, col="MH", ref="WW", color="black")
-    add_model_line(axes, theta1, gt="MH")
+    # add_model_line(axes, theta1, gt="MH")
     axes.set_ylabel("branching events in\n$plt3\ plt7/+$ background")
 
     gts = ["WW-Summer 22", "MW-Fall 22", "MM8-Summer 22"]
@@ -189,7 +188,7 @@ if __name__ == "__main__":
 
     axes = subplots[1, 0]
     plot_phenotypes_scatter(df, axes, col="MW", ref="WW", color="black")
-    add_model_line(axes, theta2, gt="MW")
+    # add_model_line(axes, theta2, gt="MW")
     axes.set_ylabel("branching events in\n$EJ2\ j2$ background")
 
     gts = ["WW-Summer 22", "MW-Fall 22", "MH-Fall 22"]
@@ -215,16 +214,15 @@ if __name__ == "__main__":
         )
 
     axes = subplots[1, 1]
-    for allele in EJ2_SERIES:
-        plot_phenotypes_scatter(
-            df,
-            axes,
-            col="MH{}".format(allele),
-            ref="WW",
-            color="black",
-        )
-        add_model_line(axes, theta2, gt="MH{}".format(allele))
-    axes.set_ylabel("branching events in\n$EJ2^{pro}/+\ j2$ background")
+    plot_phenotypes_scatter(
+        df,
+        axes,
+        col="MH8",
+        ref="WW",
+        color="black",
+    )
+        # add_model_line(axes, theta2, gt="MH{}".format(allele))
+    axes.set_ylabel("branching events in\n$EJ2^{pro8}/+\ j2$ background")
     axes.set_xlabel("branching events in $EJ2\ J2$ background")
 
     gts = ["WW-Summer 22", "MW-Fall 22", "MH-Fall 22"]
@@ -252,16 +250,15 @@ if __name__ == "__main__":
         )
 
     axes = subplots[1, 2]
-    for allele in EJ2_SERIES:
-        plot_phenotypes_scatter(
-            df,
-            axes,
-            col="MM{}".format(allele),
-            ref="WW",
-            color="black",
-        )
-        add_model_line(axes, theta2, gt="MM{}".format(allele))
-    axes.set_ylabel("branching events in\n$EJ2^{pro}\ j2$ background")
+    plot_phenotypes_scatter(
+        df,
+        axes,
+        col="MM8",
+        ref="WW",
+        color="black",
+    )
+    # add_model_line(axes, theta2, gt="MM{}".format(allele))
+    axes.set_ylabel("branching events in\n$EJ2^{pro8}\ j2$ background")
 
     gts = ["WW-Summer 22", "MW-Summer 23", "MH-Summer 22"]
     dxs = [-0.5, -0.75, 0.5]
@@ -286,9 +283,13 @@ if __name__ == "__main__":
             fontsize=5,
             arrowprops=arrowprops,
         )
+        
+    for axes in subplots.flatten():
+        axes.axline((1, 1), (2, 2), lw=0.3, c="grey", linestyle="--", alpha=0.5)
 
     # Re-arrange and save figure
+    print('Rendering figure')
     fig.tight_layout(w_pad=0.05, h_pad=0)
-    fname = "figures/linear_effects".format()
+    fname = "figures/Figure4DE"
     fig.savefig("{}.png".format(fname), dpi=300)
     fig.savefig("{}.svg".format(fname))
