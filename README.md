@@ -1,4 +1,8 @@
-# Analysis of genetic interactions driving number of branches in tomato influorescense
+# Analysis of the genotype-phenotype map of the PLT-MADS regulatory network
+
+This repository contains the code and data necessary to reproduce the analses and figures presented in the following publication in which we study the genetic architecture of inflorescence branching in tomato by combining genetic perturbations of two pairs of paralog genes in a gene regulatory network. 
+
+- Sophia G. Zebell, Carlos Martí-Gómez, Blaine Fitzgerald, Camila Pinto Da Cunha, Michael Lach, Brooke M. Seman, Anat Hendelman, Simon Sretnovic, Madelaine Bartlett, Yiping Qi, Yuval Eshed, David M. McCandlish*, Zachary B. Lippman (2025). Cryptic variation in a plant regulatory network fuels phenotypic change through hierarchical epistasis
 
 ### Requirements
 
@@ -18,7 +22,21 @@ pip install -r requirements.txt
 ### Folders
 
 - data: contains the raw and processed data files generated from the analysis
-- scripts: contains the series of MAVE-NN models that are precomputed
 - results: contains result tables from fitting the models and making predictions
+- scripts: 
+  - models: scripts to preprocess data and fit the different models, evaluate them and make phenotypic predictions under them 
+  - main: scripts to generate the panels from the main Figure 4
+  - supp: scripts to generate associated supplementary Figures
 
-- 
+### Execution
+
+For reproducing the complete analysis, the bash script  `run.sh` runs all the scripts in the specified order.
+
+```bash
+bash run.sh
+```
+
+However, each script can be run independently by leveraging the preprocessed files that we provide in the `data` and `results` folders
+
+
+
