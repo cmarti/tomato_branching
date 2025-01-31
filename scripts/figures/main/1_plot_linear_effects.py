@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from scripts.utils import plot_phenotypes_scatter, add_model_line
-from scripts.settings import EJ2_SERIES, FIG_WIDTH
+from scripts.utils import plot_phenotypes_scatter
+from scripts.settings import FIG_WIDTH
 
 
 if __name__ == "__main__":
