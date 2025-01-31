@@ -853,39 +853,41 @@ def plot_phenotypes_scatter(
     add_diag=False,
     add_svd_line=True,
 ):
-    df = np.exp(df.dropna(subset=[ref, col]))
-    x, y = df[ref], df[col]
+    if ref in df.columns and col in df.columns:
+        df = np.exp(df.dropna(subset=[ref, col]))
+        x, y = df[ref], df[col]
 
-    try:
-        dx = np.abs(df[["{}_lower".format(ref), "{}_upper".format(ref)]].T - x)
-    except KeyError:
-        dx = None
+        try:
+            dx = np.abs(df[["{}_lower".format(ref), "{}_upper".format(ref)]].T - x)
+        except KeyError:
+            dx = None
 
-    try:
-        dy = np.abs(df[["{}_lower".format(col), "{}_upper".format(col)]].T - y)
-    except KeyError:
-        dy = None
+        try:
+            dy = np.abs(df[["{}_lower".format(col), "{}_upper".format(col)]].T - y)
+        except KeyError:
+            dy = None
 
-    axes.errorbar(
-        x, y, xerr=dx, yerr=dy, lw=0.1, alpha=alpha, ecolor=color, fmt="none"
-    )
-    axes.scatter(
-        x,
-        y,
-        c=color,
-        alpha=alpha,
-        s=2,
-        lw=0.1,
-        label=label,
-        edgecolor="white",
-    )
+        axes.errorbar(
+            x, y, xerr=dx, yerr=dy, lw=0.1, alpha=alpha, ecolor=color, fmt="none"
+        )
+        axes.scatter(
+            x,
+            y,
+            c=color,
+            alpha=alpha,
+            s=2,
+            lw=0.1,
+            label=label,
+            edgecolor="white",
+        )
+        if add_svd_line:
+            A = np.log(df[[ref, col]].values)
+            p0 = np.mean(A, axis=0)
+            _, _, V = np.linalg.svd(A-p0)
+            p1 = p0 + V[0, :]
+            axes.axline(np.exp(p0), np.exp(p1), lw=0.5, c='black', linestyle='--')
+            
     set_aspect(axes, add_diag=add_diag)
-    if add_svd_line:
-        A = np.log(df[[ref, col]].values)
-        p0 = np.mean(A, axis=0)
-        _, _, V = np.linalg.svd(A-p0)
-        p1 = p0 + V[0, :]
-        axes.axline(np.exp(p0), np.exp(p1), lw=0.5, c='black', linestyle='--')
 
 def add_model_line(axes, theta, gt):
     point1 = (np.exp(theta.loc["WW", "v1"]), np.exp(theta.loc[gt, "v1"]))
