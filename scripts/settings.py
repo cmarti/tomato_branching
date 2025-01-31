@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 
 EJ2_SERIES = ["3", "4", "1", "7", "8", "6"]
-EJ2_SERIES_LABELS = ["EJ2({})".format(i) for i in EJ2_SERIES]
+EJ2_SERIES_LABELS = [r'$EJ2^{pro3}$', r'$EJ2^{pro4}$', r'$EJ2^{pro1}$',
+                     r'$EJ2^{pro7}$', r'$EJ2^{pro8}$' ,r'$EJ2^{pro6}$']
 G_SITES_SIMPLE = ["PLT3", "PLT7", "J2"]
 G_SITES = G_SITES_SIMPLE + EJ2_SERIES_LABELS
 GE_SITES = G_SITES + ["Season"]

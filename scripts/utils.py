@@ -850,7 +850,8 @@ def plot_phenotypes_scatter(
     color="black",
     alpha=1,
     label=None,
-    add_diag=True,
+    add_diag=False,
+    add_svd_line=True,
 ):
     df = np.exp(df.dropna(subset=[ref, col]))
     x, y = df[ref], df[col]
@@ -879,7 +880,12 @@ def plot_phenotypes_scatter(
         edgecolor="white",
     )
     set_aspect(axes, add_diag=add_diag)
-
+    if add_svd_line:
+        A = np.log(df[[ref, col]].values)
+        p0 = np.mean(A, axis=0)
+        _, _, V = np.linalg.svd(A-p0)
+        p1 = p0 + V[0, :]
+        axes.axline(np.exp(p0), np.exp(p1), lw=0.5, c='black', linestyle='--')
 
 def add_model_line(axes, theta, gt):
     point1 = (np.exp(theta.loc["WW", "v1"]), np.exp(theta.loc[gt, "v1"]))
