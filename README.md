@@ -13,7 +13,17 @@ conda create -n tomato python==3.8
 conda activate tomato
 ```
 
-Running the scripts for the analysis requires a series of python libraries that can be easily set up by
+Running the scripts for the analysis requires a series of python libraries 
+
+- numpy
+- pandas
+- scipy
+- statsmodels
+- torch
+- matplotlib
+- seaborn
+
+They can be installed manually using `pip`. To install the exact versions of the library we used:
 
 ```bash
 pip install -r requirements.txt
