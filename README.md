@@ -25,8 +25,9 @@ pip install -r requirements.txt
 - results: contains result tables from fitting the models and making predictions
 - scripts: 
   - models: scripts to preprocess data and fit the different models, evaluate them and make phenotypic predictions under them 
-  - main: scripts to generate the panels from the main Figure 4
-  - supp: scripts to generate associated supplementary Figures
+  - figures/main: scripts to generate the panels from the main Figure 4
+  - figures/supp: scripts to generate associated supplementary Figures
+- figures: contains the generated main and supplementary figure panels
 
 ### Execution
 
