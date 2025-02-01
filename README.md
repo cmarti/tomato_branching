@@ -22,6 +22,7 @@ Running the scripts for the analysis requires a series of python libraries
 - torch
 - matplotlib
 - seaborn
+- tqdm
 
 They can be installed manually using `pip`. To install the exact versions of the library we used:
 
