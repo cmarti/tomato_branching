@@ -132,7 +132,7 @@ if __name__ == "__main__":
     results.save("results/saturated_poisson.pkl")
 
     subsets = {
-        # "additive": additive_basis,
+        "additive": additive_basis,
         "pairwise": pairwise_basis,
     }
 
