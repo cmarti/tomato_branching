@@ -27,9 +27,9 @@ if __name__ == "__main__":
         gt_data["saturated_upper"] - gt_data["saturated_lower"] < 10, :
     ]
 
-    theta1 = pd.read_csv("results/multilinear.theta1.csv", index_col=0)
-    theta2 = pd.read_csv("results/multilinear.theta2.csv", index_col=0)
-    theta2["gt"] = [x[:2] for x in theta2.index]
+    # theta1 = pd.read_csv("results/multilinear.theta1.csv", index_col=0)
+    # theta2 = pd.read_csv("results/multilinear.theta2.csv", index_col=0)
+    # theta2["gt"] = [x[:2] for x in theta2.index]
 
     # Init figure
     fig, subplots = plt.subplots(
