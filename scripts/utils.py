@@ -11,7 +11,7 @@ from scripts.settings import (
     EJ2_SERIES,
     ALLELES,
     G_SITES_SIMPLE,
-    EJ2_SERIES_LABELS,
+    EJ2_SERIES_NAMES,
     SEASONS,
     G_SITES,
     LIMS,
@@ -75,7 +75,7 @@ def get_gxg_basis(additive_basis, rm_zeros=False):
     }
 
     for s1 in G_SITES_SIMPLE:
-        for s2 in EJ2_SERIES_LABELS:
+        for s2 in EJ2_SERIES_NAMES:
             gxg["{}_{}".format(s1, s2)] = (
                 additive_basis[s1] * additive_basis[s2]
             )
@@ -90,7 +90,7 @@ def get_dxd_basis(dominance_basis, rm_zeros=False):
     }
 
     for s1 in G_SITES_SIMPLE:
-        for s2 in EJ2_SERIES_LABELS:
+        for s2 in EJ2_SERIES_NAMES:
             dxd["{}.het_{}.het".format(s1, s2)] = (
                 dominance_basis["{}.het".format(s1)]
                 * dominance_basis["{}.het".format(s2)]
@@ -124,7 +124,7 @@ def get_3way_basis(
                 g_basis[label] = np.prod(bs, 0)
 
     for s1, s2 in combinations(sites_set, 2):
-        for s3 in EJ2_SERIES_LABELS:
+        for s3 in EJ2_SERIES_NAMES:
             sites = [s1, s2, s3]
             for components in product(["g", "d"], repeat=3):
                 bs = [
@@ -157,7 +157,7 @@ def get_gxd_basis(additive_basis, dominance_basis, rm_zeros=False):
         {
             "{}_{}.het".format(s1, s2): additive_basis[s1]
             * dominance_basis["{}.het".format(s2)]
-            for s1, s2 in get_product(EJ2_SERIES_LABELS, G_SITES_SIMPLE)
+            for s1, s2 in get_product(EJ2_SERIES_NAMES, G_SITES_SIMPLE)
             if s1 != s2
         }
     )
@@ -278,7 +278,7 @@ def get_double_mutant_plant_data():
                         records.append(record)
 
                 # Combinations with allelic series
-                for variant, label in zip(EJ2_SERIES, EJ2_SERIES_LABELS):
+                for variant, label in zip(EJ2_SERIES, EJ2_SERIES_NAMES):
                     for a2 in ALLELES:
                         record = {
                             "v1": "{}-{}".format(site1, a1),
@@ -319,7 +319,7 @@ def get_env_plant_data_pred():
 
     for season in SEASONS:
         for alleles in product(ALLELES, repeat=3):
-            for variant, label in zip(EJ2_SERIES, EJ2_SERIES_LABELS):
+            for variant, label in zip(EJ2_SERIES, EJ2_SERIES_NAMES):
                 for a2 in ALLELES:
                     record = dict(zip(G_SITES_SIMPLE, alleles))
                     record["EJ2"] = (
@@ -364,7 +364,7 @@ def get_masking_plant_data():
                     record["site"] = "J2"
                     records.append(record)
 
-                for variant, label in zip(EJ2_SERIES, EJ2_SERIES_LABELS):
+                for variant, label in zip(EJ2_SERIES, EJ2_SERIES_NAMES):
                     record = base_record.copy()
                     record.update(background)
                     record["EJ2"] = (
@@ -388,7 +388,7 @@ def get_masking_plant_data():
 def get_masking_plts_plant_data():
     plant_datas = []
     backgrounds = {"wt": {}, "j2": {"J2": "M"}}
-    for variant, label in zip(EJ2_SERIES, EJ2_SERIES_LABELS):
+    for variant, label in zip(EJ2_SERIES, EJ2_SERIES_NAMES):
         backgrounds[label.lower()] = {"EJ2": "M{}".format(variant)}
         backgrounds["{}/j2".format(label.lower())] = {
             "EJ2": "M{}".format(variant),
@@ -427,7 +427,7 @@ def get_plts_masking_plant_data(site1, site2):
     base_contrast = {
         x: 0
         for x in ["00", "01", "10", "11", "in_WT", "in_J2", "J2"]
-        + EJ2_SERIES_LABELS
+        + EJ2_SERIES_NAMES
     }
 
     base_int = {
@@ -454,7 +454,7 @@ def get_plts_masking_plant_data(site1, site2):
                 contrast.update(
                     {
                         x: -base_int[(a1, a2, a3)]
-                        for x in ["J2"] + EJ2_SERIES_LABELS
+                        for x in ["J2"] + EJ2_SERIES_NAMES
                     }
                 )
                 contrast["in_WT"] = base_int[(a1, a2, a3)]
@@ -477,7 +477,7 @@ def get_plts_masking_plant_data(site1, site2):
                 contrast["in_J2"] = -base_int[(a1, a2, a3)]
                 contrasts.append(contrast)
 
-                for site3, label in zip(EJ2_SERIES, EJ2_SERIES_LABELS):
+                for site3, label in zip(EJ2_SERIES, EJ2_SERIES_NAMES):
                     record = base_record.copy()
                     record.update(
                         {
@@ -497,7 +497,7 @@ def get_plts_masking_plant_data(site1, site2):
         records
     )  # .drop_duplicates().reset_index().drop('index', axis=1)
     contrasts = 0.25 * pd.DataFrame(contrasts)
-    contrasts["EJ2_mean"] = contrasts[EJ2_SERIES_LABELS].mean(1)
+    contrasts["EJ2_mean"] = contrasts[EJ2_SERIES_NAMES].mean(1)
     contrasts.columns = [
         "h{}_{}_{}".format(site1, site2, x) for x in contrasts.columns
     ]
