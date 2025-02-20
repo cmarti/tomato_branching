@@ -33,7 +33,10 @@ pip install -r requirements.txt
 ### Folders
 
 - data: contains the raw and processed data files generated from the analysis
+  - `Branching_Master.csv` contains the raw data for each plant
 - results: contains result tables from fitting the models and making predictions
+  - `pairwise_model.coeff.csv` will contain the estimates of the pairwise coefficients
+  - `genotype_predictions.csv` will contain the genotype-season phenotypic estimates under the different models
 - scripts: 
   - models: scripts to preprocess data and fit the different models, evaluate them and make phenotypic predictions under them 
   - figures/main: scripts to generate the panels from the main Figure 4
