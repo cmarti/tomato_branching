@@ -8,18 +8,11 @@ from scripts.settings import FIG_WIDTH
 
 
 if __name__ == "__main__":
-    # Init figure
-    fig, subplots = plt.subplots(
-        1,
-        8,
-        figsize=(FIG_WIDTH * 1.1, 0.33 * FIG_WIDTH),
-    )
-
+    print("Loading genotype predictions")
     encoding = {"W": 0, "H": 1, "M": 2}
     pred = pd.read_csv("results/genotype_predictions.csv", index_col=0)
     lims = 0.035, 40
 
-    print("Plotting EJ2 J2 interaction across backgrounds")
     backgrounds = ["WW", "WH", "HW", "WM", "HH", "MW", "HM", "MH"]
     bc_labels = [
         "$PLT3\ PLT7$",
@@ -32,7 +25,16 @@ if __name__ == "__main__":
         "$plt3\ plt7/+$",
     ]
     label, allele = "$EJ2^{pro8}$", 8
+    # Init figure
+    fig, subplots = plt.subplots(
+        1,
+        8,
+        figsize=(FIG_WIDTH * 1.1, 0.33 * FIG_WIDTH),
+    )
+
+    print("Plotting J2-EJ2 phenotypes across PLT3-PLT7 backgrounds")
     for bc, axes, bc_label in zip(backgrounds, subplots, bc_labels):
+        print("\tBackground {}".format(bc))
         pred_j2 = (
             pred.loc[pred["s1"] == bc, :]
             .drop_duplicates(["PLT3", "PLT7", "J2", "EJ2"])
@@ -49,7 +51,7 @@ if __name__ == "__main__":
         df = pred_j2.loc[idx, :]
         axes.scatter(
             df["x"],
-            np.exp(df["multilinear_pred"]),
+            np.exp(df["hierarchical_pred"]),
             c="black",
             zorder=10,
             s=7,
@@ -64,7 +66,10 @@ if __name__ == "__main__":
             if d == 1:
                 sdf = df.loc[[s1, s2], :]
                 axes.plot(
-                    sdf["x"], np.exp(sdf["multilinear_pred"]), lw=0.75, c="grey"
+                    sdf["x"],
+                    np.exp(sdf["hierarchical_pred"]),
+                    lw=0.75,
+                    c="grey",
                 )
         axes.set(
             yscale="log",
@@ -79,16 +84,16 @@ if __name__ == "__main__":
             axes.set(yticklabels=[])
 
         try:
-            x, y = df.loc["WM{}".format(allele), ["x", "multilinear_pred"]]
+            x, y = df.loc["WM{}".format(allele), ["x", "hierarchical_pred"]]
             axes.text(
                 x + 0.1, np.exp(y), label, va="top", ha="left", fontsize=6
             )
         except KeyError:
             pass
-        x, y = df.loc["MW", ["x", "multilinear_pred"]]
+        x, y = df.loc["MW", ["x", "hierarchical_pred"]]
         axes.text(x, np.exp(y), "$j2$", va="bottom", ha="right", fontsize=6)
         try:
-            x, y = df.loc["MM{}".format(allele), ["x", "multilinear_pred"]]
+            x, y = df.loc["MM{}".format(allele), ["x", "hierarchical_pred"]]
             axes.text(
                 x,
                 np.exp(y),
@@ -120,6 +125,8 @@ if __name__ == "__main__":
     # Re-arrange and save figure
     fig.tight_layout(w_pad=0.2, h_pad=-0.25)
 
+    print("Rendering")
     fname = "figures/FigureS8c"
     fig.savefig("{}.png".format(fname), dpi=600)
     fig.savefig("{}.svg".format(fname))
+    print("Done")

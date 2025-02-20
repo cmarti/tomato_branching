@@ -34,34 +34,39 @@ def plot(df, axes, x, y, color="black", alpha=1, label=None):
         fontsize=7,
     )
     set_aspect(axes)
-    return(r2)
+    return r2
 
 
 if __name__ == "__main__":
     # Load data
-    print("Plotting effects of mutations across backgrounds")
+    print("Plotting leave-season-out and held out genotypes predictions")
     gt_data = pd.read_csv("results/genotype_predictions.csv", index_col=0)
     gt_data = gt_data.loc[
-        gt_data["saturated_upper"] - gt_data["saturated_lower"] < 10, :
+        (gt_data["saturated_upper"] - gt_data["saturated_lower"]) < np.log(1e3),
+        :,
     ]
     seasons = gt_data["Season"].values
     gt_data = np.exp(gt_data.iloc[:, 8:])
+
+    devs = pd.read_csv("results/model.deviance_explained.csv", index_col=0)
+    lls = devs.pivot(index="model", columns="test_data", values="ll")
+    devs = devs.pivot(index="model", columns="test_data", values="dev_perc")
 
     gt = np.array(["_".join(x.split("_")[:-1]) for x in gt_data.index])
     held_out_gts = np.load("results/held_out_gts.npy", allow_pickle=True)
     idx = np.isin(gt, held_out_gts)
     cols = [x for x in gt_data.columns if x.endswith("pred")]
-    print(np.log(gt_data.loc[idx, cols]).corr()["saturated_pred"])
 
     # Init figure
     fig, subplots = plt.subplots(
         3, 5, figsize=(FIG_WIDTH, 0.65 * FIG_WIDTH), sharex=True, sharey=True
     )
 
-    models = ["additive", "pairwise", "multilinear"]
+    models = ["additive", "pairwise", "hierarchical"]
     labels = {}
     for model, row in zip(models, subplots):
         r2s = []
+        model_label = labels.get(model, model).capitalize()
         for season, axes in zip(SEASONS, row):
             df = gt_data.loc[seasons == season, :]
             r2 = plot(df, axes, model, "saturated")
@@ -69,13 +74,26 @@ if __name__ == "__main__":
             axes.text(
                 0.95,
                 0.05,
-                "{} model".format(labels.get(model, model).capitalize()),
+                model_label,
                 transform=axes.transAxes,
                 ha="right",
                 va="bottom",
                 fontsize=7,
             )
-        print(model, np.mean(r2s))
+            # axes.text(
+            #     0.05,
+            #     0.95,
+            #     "DE={:.2f}%".format(devs.loc[model, season]),
+            #     transform=axes.transAxes,
+            #     ha="left",
+            #     va="top",
+            #     fontsize=7,
+            # )
+        print(
+            "\t{} average leave-season-out r2 = {:.2f}".format(
+                model_label, np.mean(r2s)
+            )
+        )
 
         axes = row[-1]
         df = gt_data.loc[idx, :]
@@ -83,12 +101,21 @@ if __name__ == "__main__":
         axes.text(
             0.95,
             0.05,
-            "{} model".format(labels.get(model, model).capitalize()),
+            model_label,
             transform=axes.transAxes,
             ha="right",
             va="bottom",
             fontsize=7,
         )
+        # axes.text(
+        #     0.05,
+        #     0.95,
+        #     "DE={:.2f}%".format(devs.loc[model, "test"]),
+        #     transform=axes.transAxes,
+        #     ha="left",
+        #     va="top",
+        #     fontsize=7,
+        # )
 
     subplots[0][-1].set_title("10% genotypes")
     for axes, season in zip(subplots[0], SEASONS):
@@ -105,6 +132,4 @@ if __name__ == "__main__":
     # Re-arrange and save figure
     fig.tight_layout(w_pad=0.05, h_pad=0.15)
     fname = "figures/FigureS5".format()
-    # fig.savefig("{}.png".format(fname), dpi=300)
-    # fig.savefig("{}.svg".format(fname))
     fig.savefig("{}.pdf".format(fname))

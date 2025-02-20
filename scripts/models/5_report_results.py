@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import numpy as np
 import pandas as pd
+import torch
 
 from statsmodels.iolib.smpickle import load_pickle
 from scipy.stats import chi2
 from scripts.settings import EJ2_SERIES
+from scripts.models.hierarchical_model import HierarchicalModel
 
 
 def lr_test(larger, restricted=None, add_one=False):
@@ -23,12 +25,9 @@ def lr_test(larger, restricted=None, add_one=False):
     )
 
 
-def calc_dev_perc(model):
-    print(model.deviance, model.null_deviance)
-    return 100 * (1 - model.deviance / model.null_deviance)
-
-
 if __name__ == "__main__":
+    models_deviance = []
+
     null_model = load_pickle("results/null_model.pkl")
     saturated_model = load_pickle("results/saturated_model.pkl")
 
@@ -36,45 +35,43 @@ if __name__ == "__main__":
     saturated_ll = saturated_model.llf_scaled()
     null_deviance = 2 * (saturated_ll - null_ll)
 
+    def calc_dev_perc(ll):
+        deviance = 2 * (saturated_ll - ll)
+        dev_perc = 100 * (1 - deviance / null_deviance)
+        return dev_perc
+
+    models_deviance.append({"model": "null model", "deviance": 0})
+
     print("== Comparing Poisson and NB saturated models")
     saturated_model = load_pickle("results/saturated_model.pkl")
     saturated_poisson = load_pickle("results/saturated_poisson.pkl")
     lr_test(saturated_model, saturated_poisson, add_one=True)
 
     print("\n== Comparing additive models at different scales")
-    print("Deviance of null model = {}".format(null_deviance))
-
-    poisson_linear = load_pickle("results/poisson_linear_model.pkl")
-    dev_perc = 100 * (
-        1 - poisson_linear.deviance / poisson_linear.null_deviance
-    )
-    print("Poisson linear % deviance explained = {:.2f}".format(dev_perc))
-
-    poisson_log = load_pickle("results/poisson_log_model.pkl")
-    dev_perc = 100 * (1 - poisson_log.deviance / poisson_log.null_deviance)
-    print("Poisson log % deviance explained = {:.2f}".format(dev_perc))
-
     nb_linear = load_pickle("results/model.nb_linear.pkl")
-    dev_perc = 100 * (1 - nb_linear.deviance / nb_linear.null_deviance)
-    print("NB linear % deviance explained = {:.2f}".format(dev_perc))
+    dev_perc = calc_dev_perc(nb_linear.llf_scaled())
+    print("linear % deviance explained = {:.2f}".format(dev_perc))
+    models_deviance.append(
+        {"model": "negative binomial linear", "deviance": dev_perc}
+    )
 
     nb_log = load_pickle("results/model.nb_log.pkl")
-    dev_perc = 100 * (1 - nb_log.deviance / nb_log.null_deviance)
-    print("NB log % deviance explained = {:.2f}".format(dev_perc))
+    dev_perc = calc_dev_perc(nb_log.llf_scaled())
+    print("log % deviance explained = {:.2f}".format(dev_perc))
+    models_deviance.append(
+        {"model": "negative binomial log", "deviance": dev_perc}
+    )
 
-    print("\n== Comparing additive and pairwise NB models == ")
+    print("\n== Comparing additive and pairwise models == ")
     additive_model = load_pickle("results/additive_model.pkl")
-    deviance = 2 * (saturated_ll - additive_model.llf_scaled())
-    additive_dev_perc = 100 * (1 - deviance / null_deviance)
-    print("Additive % deviance explained = {:.2f}".format(additive_dev_perc))
-    print("Additive model AIC = {}".format(additive_model.aic))
+    dev_perc = calc_dev_perc(additive_model.llf_scaled())
+    models_deviance.append({"model": "additive model", "deviance": dev_perc})
+    print("Additive % deviance explained = {:.2f}".format(dev_perc))
 
     pairwise_model = load_pickle("results/pairwise_model.pkl")
-    deviance = 2 * (saturated_ll - pairwise_model.llf_scaled())
-    pairwise_dev_perc = 100 * (1 - deviance / null_deviance)
-    print("Pairwise % deviance explained = {:.2f}".format(pairwise_dev_perc))
-    print("Pairwise model AIC = {}".format(pairwise_model.aic))
-
+    dev_perc = calc_dev_perc(pairwise_model.llf_scaled())
+    print("Pairwise % deviance explained = {:.2f}".format(dev_perc))
+    models_deviance.append({"model": "pairwise model", "deviance": dev_perc})
     lr_test(pairwise_model, additive_model)
 
     print("\n== Reporting synergistic interactions ==")
@@ -124,26 +121,51 @@ if __name__ == "__main__":
     coefs = ["J2_EJ2({})".format(a) for a in EJ2_SERIES]
     results = pd.concat([results1, results2.loc[coefs, :]])
     results["fold_change"] = np.exp(results["coef"])
-    results.to_excel('results/pairwise_interactions.xlsx')
-    print(results)
+    results["fold_change_lower"] = np.exp(results["Conf. Int. Low"])
+    results["fold_change_upper"] = np.exp(results["Conf. Int. Upp."])
+    results.to_excel("results/pairwise_interactions.xlsx")
+    print(results.iloc[:, [3, 6, 7, 8]])
 
-    pairwise = np.array(["_" in x for x in results2.index])
-    nsig = np.sum(pairwise & (results2["P>|z|"] < 0.05))
-    ntotal = np.sum(pairwise)
+    pairwise_epistatic_coef = np.array(
+        ["_" in x and "het" not in x for x in results2.index]
+    )
+    nsig = np.sum(pairwise_epistatic_coef & (results2["P>|z|"] < 0.05))
+    ntotal = np.sum(pairwise_epistatic_coef)
     print(
         "Number of significant pairwise coefficients = {} / {}".format(
             nsig, ntotal
         )
     )
+    non_paralogous_epi_coeff = np.array(
+        [
+            "_" in x and "het" not in x and "J2_EJ2" not in x
+            for x in results2.index
+        ]
+    )
+    nsig = np.sum(non_paralogous_epi_coeff & (results2["P>|z|"] < 0.05))
+    ntotal = np.sum(non_paralogous_epi_coeff)
+    print(
+        "Number of significant non-paralogous pairwise coefficients = {} / {}".format(
+            nsig, ntotal
+        )
+    )
 
-    print("\n== Multilinear model ==")
-    history = pd.read_csv("results/multilinear.history.csv")
-    ll = -history["loss"].values[-1]
+    print("\n== hierarchical model ==")
+    hierarchical_model = torch.load("results/hierarchical.pkl")
+    ll = hierarchical_model.llf
+    dev_perc = calc_dev_perc(ll)
+    models_deviance.append(
+        {"model": "hierarchical model", "deviance": dev_perc}
+    )
+    print("Hierarchical model % deviance explained = {:.2f}".format(dev_perc))
+    hierarchical_aic = 2 * hierarchical_model.n_params - 2 * ll
+    delta_aic = hierarchical_aic - pairwise_model.aic
+    print("Hierarchical model AIC = {}".format(hierarchical_aic))
+    print(
+        "Delta AIC with pairwise model = {} ({} times more likely)".format(
+            delta_aic, np.exp(-delta_aic / 2)
+        )
+    )
 
-    deviance = 2 * (saturated_ll - ll)
-    dev_perc = 100 * (1 - deviance / null_deviance)
-    print("Multilinear model % deviance explained = {:.2f}".format(dev_perc))
-    n_params = 1 + 8 + 2 + 6 * 6
-    aic = 2 * n_params - 2 * ll
-    print("Multilinear model AIC = {}".format(aic))
-    print("Delta AIC with pairwise model = {}".format(aic - pairwise_model.aic))
+    models_deviance = pd.DataFrame(models_deviance).set_index("model")
+    models_deviance.to_csv("results/models.deviance.csv")

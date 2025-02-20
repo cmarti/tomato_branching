@@ -24,12 +24,9 @@ if __name__ == "__main__":
     print("Plotting effects of mutations across backgrounds")
     gt_data = pd.read_csv("results/genotype_predictions.csv", index_col=0)
     gt_data = gt_data.loc[
-        gt_data["saturated_upper"] - gt_data["saturated_lower"] < 10, :
+        (gt_data["saturated_upper"] - gt_data["saturated_lower"]) < np.log(1e3),
+        :,
     ]
-
-    # theta1 = pd.read_csv("results/multilinear.theta1.csv", index_col=0)
-    # theta2 = pd.read_csv("results/multilinear.theta2.csv", index_col=0)
-    # theta2["gt"] = [x[:2] for x in theta2.index]
 
     # Init figure
     fig, subplots = plt.subplots(
@@ -221,7 +218,7 @@ if __name__ == "__main__":
         ref="WW",
         color="black",
     )
-        # add_model_line(axes, theta2, gt="MH{}".format(allele))
+    # add_model_line(axes, theta2, gt="MH{}".format(allele))
     axes.set_ylabel("branching events in\n$EJ2^{pro8}/+\ j2$ background")
     axes.set_xlabel("branching events in $EJ2\ J2$ background")
 
@@ -283,12 +280,12 @@ if __name__ == "__main__":
             fontsize=5,
             arrowprops=arrowprops,
         )
-        
+
     for axes in subplots.flatten():
         axes.axline((1, 1), (2, 2), lw=0.3, c="grey", linestyle="--", alpha=0.5)
 
     # Re-arrange and save figure
-    print('Rendering figure')
+    print("Rendering figure")
     fig.tight_layout(w_pad=0.05, h_pad=0)
     fname = "figures/Figure4DE"
     fig.savefig("{}.png".format(fname), dpi=300)

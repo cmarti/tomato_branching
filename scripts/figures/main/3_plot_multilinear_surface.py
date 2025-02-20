@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 from scipy.stats import pearsonr
 
-from scripts.models.multilinear_model import MultilinearModel
+from scripts.models.hierarchical_model import HierarchicalModel
 from scripts.settings import FIG_WIDTH
 from scripts.utils import set_aspect
 
@@ -63,7 +63,7 @@ def plot_line(axes, f1, f2, model, wt, linestyle="--"):
 
 if __name__ == "__main__":
     # Load data
-    print("Plotting surface representing the multilinear model")
+    print("Plotting surface representing the hierarchical model")
     gt_data = pd.read_csv("results/genotype_predictions.csv", index_col=0)
     stderr = (gt_data["saturated_upper"] - gt_data["saturated_lower"]) / 2
     gt_data = gt_data.loc[stderr < 10, :]
@@ -80,9 +80,9 @@ if __name__ == "__main__":
     gt_data["z"] = gt_data["saturated_pred"]
 
     # df = np.exp(gt_data[["x", "y", "z"]].dropna())
-    df = gt_data[["x", "y", "z", "multilinear_pred"]].dropna()
+    df = gt_data[["x", "y", "z", "hierarchical_pred"]].dropna()
 
-    model = torch.load("results/multilinear.pkl")
+    model = torch.load("results/hierarchical.pkl")
     wt = model.beta[0].detach().item()
     f1 = get_wt_phenotypes()
     f2 = get_wt_phenotypes()
@@ -112,20 +112,20 @@ if __name__ == "__main__":
         "M_W_W_W_Summer 22",
         "M_H_W_W_Summer 22",
     ]
-    values = df.loc[gts1, "multilinear_pred"].values
+    values = df.loc[gts1, "hierarchical_pred"].values
     for v in values:
         f1_ = get_wt_phenotypes()
         f2_ = np.full_like(f1_, fill_value=v)
         plot_line(axes, f1_, f2_, model, wt, linestyle="--")
 
-    v0 = df.loc["W_W_W_W_Summer 23", "multilinear_pred"]
-    v1 = df.loc["W_W_M_M8_Summer 23", "multilinear_pred"]
+    v0 = df.loc["W_W_W_W_Summer 23", "hierarchical_pred"]
+    v1 = df.loc["W_W_M_M8_Summer 23", "hierarchical_pred"]
     f1_ = get_wt_phenotypes(np.exp(v0), np.exp(v1))
     for v in [values[0], values[2]]:
         f2_ = np.full_like(f1_, fill_value=v)
         plot_line(axes, f1_, f2_, model, wt, linestyle="-")
 
-    v1 = df.loc["W_W_M_W_Summer 23", "multilinear_pred"]
+    v1 = df.loc["W_W_M_W_Summer 23", "hierarchical_pred"]
     f1_ = get_wt_phenotypes(np.exp(v0), np.exp(v1))
     f2_ = np.full_like(f1_, fill_value=values[1])
     plot_line(axes, f1_, f2_, model, wt, linestyle="-")
@@ -136,30 +136,30 @@ if __name__ == "__main__":
         "W_W_M_W_Summer 23",
         "W_W_M_M8_Summer 23",
     ]
-    values = df.loc[gts2, "multilinear_pred"].values
+    values = df.loc[gts2, "hierarchical_pred"].values
     for v in values:
         f2_ = get_wt_phenotypes()
         f1_ = np.full_like(f2_, fill_value=v)
         plot_line(axes, f1_, f2_, model, wt, linestyle="--")
 
-    v0 = df.loc["W_W_W_W_Summer 22", "multilinear_pred"]
-    v1 = df.loc["M_H_W_W_Summer 22", "multilinear_pred"]
+    v0 = df.loc["W_W_W_W_Summer 22", "hierarchical_pred"]
+    v1 = df.loc["M_H_W_W_Summer 22", "hierarchical_pred"]
     f2_ = get_wt_phenotypes(np.exp(v0), np.exp(v1))
     for v in [values[0], values[2]]:
         f1_ = np.full_like(f2_, fill_value=v)
         plot_line(axes, f1_, f2_, model, wt, linestyle="-")
 
-    v1 = df.loc["M_W_W_W_Summer 22", "multilinear_pred"]
+    v1 = df.loc["M_W_W_W_Summer 22", "hierarchical_pred"]
     f2_ = get_wt_phenotypes(np.exp(v0), np.exp(v1))
     f1_ = np.full_like(f2_, fill_value=values[1])
     plot_line(axes, f1_, f2_, model, wt, linestyle="-")
 
     df["gt"] = ["".join(x.split("_")[:-1]) for x in df.index]
-    df = df[["gt", "multilinear_pred"]].drop_duplicates().set_index("gt")
+    df = df[["gt", "hierarchical_pred"]].drop_duplicates().set_index("gt")
     x = np.array(["{}WW".format(x[:2]) for x in df.index])
-    df["x"] = df.loc[x, "multilinear_pred"].values
+    df["x"] = df.loc[x, "hierarchical_pred"].values
     y = np.array(["WW{}".format(x[2:]) for x in df.index])
-    df["y"] = df.loc[y, "multilinear_pred"].values
+    df["y"] = df.loc[y, "hierarchical_pred"].values
 
     # Plot specific genotypes
     gts = np.array(
@@ -179,14 +179,14 @@ if __name__ == "__main__":
     axes.scatter(
         df["y"] / np.log(10),
         df["x"] / np.log(10),
-        np.exp(df["multilinear_pred"]),
+        np.exp(df["hierarchical_pred"]),
         s=5,
         alpha=1,
         c="black",
         lw=0,
         zorder=10,
     )
-    values = df["multilinear_pred"]
+    values = df["hierarchical_pred"]
     wt = values.loc["WWWW"]
     pred1 = values.loc["WWMW"] + (values.loc["WWWM8"] - values.loc["WWWW"])
     pred2 = values.loc["MWWW"] + (values.loc["WHWW"] - values.loc["WWWW"])

@@ -6,9 +6,6 @@ from tqdm import tqdm
 from torch.nn import Parameter
 from scipy.stats import pearsonr
 
-from scripts.utils import get_saturated_basis
-from scripts.settings import SEASONS
-
 
 class NegativeBinomial(object):
     def __init__(self, mu, alpha):
@@ -84,7 +81,7 @@ class LinearModel(torch.nn.Module):
         self.theta = Parameter(torch.normal(torch.zeros(size=(n,))))
 
 
-class MultilinearModel(torch.nn.Module):
+class HierarchicalModel(torch.nn.Module):
     def set_data(self, x1, x2, counts, exposure, alpha=None):
         self.cols1 = x1.columns
         self.cols2 = x2.columns
@@ -149,7 +146,7 @@ class MultilinearModel(torch.nn.Module):
 
     def summary(self, pred=None, obs=None):
         print("===========================")
-        print("Log-likelihood = {:.2f}".format(model.history[-1]))
+        print("Log-likelihood = {:.2f}".format(self.history[-1]))
         print("======= Parameters ========")
         for param, values in self.get_params().items():
             print(param, values)
@@ -240,42 +237,3 @@ def prepare_data(plant_data):
     y = plant_data["branches"].values
     exposure = plant_data["influorescences"].values
     return (x1, x2, y, exposure)
-
-
-if __name__ == "__main__":
-    n_iter = 10000
-    lr = 0.01
-
-    # Load raw data
-    plant_data = pd.read_csv("data/plant_data.csv", index_col=0)
-    train = np.load("results/train_idx.npy")
-    X0 = np.ones((plant_data.shape[0], 1))
-    X = get_saturated_basis(plant_data).values
-    x1, x2, y, exposure = prepare_data(plant_data)
-
-    print("Training model on 100% of the data")
-    model = MultilinearModel()
-    model.set_data(x1, x2, y, exposure)
-    model.fit(n_iter=n_iter, lr=lr)
-    torch.save(model, "results/multilinear.pkl")
-
-    history = pd.DataFrame({"loss": model.history})
-    history.to_csv("results/multilinear.history.csv")
-
-    print("Training model on 90% of the data")
-    model = MultilinearModel()
-    model.set_data(
-        x1.loc[train, :], x2.loc[train, :], y[train], exposure[train]
-    )
-    model.fit(n_iter=n_iter, lr=lr)
-    torch.save(model, "results/multilinear.train.pkl")
-
-    for season in SEASONS:
-        print("Leaving out season: {}".format(season))
-        train = (plant_data["Season"] != season).values
-        model = MultilinearModel()
-        model.set_data(
-            x1.loc[train, :], x2.loc[train, :], y[train], exposure[train]
-        )
-        model.fit(n_iter=n_iter, lr=lr)
-        torch.save(model, "results/multilinear.{}.pkl".format(season))

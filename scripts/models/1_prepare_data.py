@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import pandas as pd
-import numpy as np
 
 from scripts.settings import EJ2_SERIES
 
@@ -17,7 +16,6 @@ if __name__ == "__main__":
     # Load raw data
     print("Processing raw data for modeling")
     data = pd.read_csv("data/Branching_Master.csv")
-    data.loc[data["Plant"] == "proliferated", "Plant"] = "100"
     data["plant_id"] = [
         "{}.{}".format(a, b) for a, b in zip(data["Pedigree"], data["Plant"])
     ]
@@ -40,7 +38,7 @@ if __name__ == "__main__":
     # Get one raw per plant
     data = pd.melt(data, id_vars=cols).dropna()
 
-    # Remove not quantitiative phenotypes
+    # Remove not quantitative phenotypes
     data = data.loc[data["value"] != "Proliferated", :]
     data = data.loc[data["value"] != "proliferated", :]
     data = data.loc[data["value"] != "inhibited", :]
@@ -64,16 +62,8 @@ if __name__ == "__main__":
         "value",
     ]
     data = data[cols]
-    print(
-        np.log(
-            data.loc[data["EJ2 Allele"] == "e", :]
-            .groupby("Specific Genotype")["value"]
-            .mean()
-        )
-    )
-    exit()
 
-    # Select relevant genotypes for this modelling
+    # Select relevant genotypes
     data = data.loc[data["EJ2"] != "M2", :]
     data = data.loc[data["EJ2"] != "Me", :]
     data = data.loc[data["EJ2"] != "He", :]
@@ -112,3 +102,28 @@ if __name__ == "__main__":
 
     # Save output
     plant_data.to_csv("data/plant_data.csv")
+
+    # Summarize per genotype
+    gt_data = (
+        data.groupby(
+            [
+                "EJ2",
+                "J2",
+                "PLT380",
+                "PLT710",
+                "Season",
+            ]
+        )
+        .agg({"value": ("mean", "var")})["value"]
+        .reset_index()
+    )
+    gt_data.columns = [
+        "EJ2",
+        "J2",
+        "PLT3",
+        "PLT7",
+        "Season",
+        "obs_mean",
+        "variance",
+    ]
+    gt_data.to_csv("data/gt_data.csv")

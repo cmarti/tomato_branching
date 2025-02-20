@@ -72,7 +72,8 @@ if __name__ == "__main__":
     gts = np.unique(plant_data["gt"])
     held_out_gts = np.random.choice(gts, size=20, replace=False)
     np.save("results/held_out_gts.npy", held_out_gts)
-    train_idx = ~np.isin(plant_data["gt"], held_out_gts)
+    test_idx = np.isin(plant_data["gt"], held_out_gts)
+    train_idx = ~test_idx
     np.save("results/train_idx.npy", train_idx)
     y = plant_data["branches"]
     exposure = plant_data["influorescences"].values
@@ -80,47 +81,27 @@ if __name__ == "__main__":
     print("Constructing basis for regression")
     additive_basis = get_add_basis(plant_data)
     pairwise_basis = get_pairwise_basis(plant_data).drop("PLT3_PLT7", axis=1)
-    null_basis = np.ones((y.shape[0], 1))
+    null_basis = pd.DataFrame(
+        np.ones((y.shape[0], 1)), index=additive_basis.index
+    )
     saturated_basis = get_saturated_basis(plant_data)
 
-    print("Fitting Poisson linear")
-    data = pd.DataFrame({"obs_mean": plant_data["obs_mean"]})
-    X_ext = additive_basis * np.expand_dims(exposure, 1)
-    results = sm.GLM(
-        y,
-        X_ext,
-        family=sm.families.Poisson(link=sm.families.links.Identity()),
-    ).fit()
-    data["poisson_linear"] = results.predict(X_ext)
-    results.save("results/poisson_linear_model.pkl")
-
-    print("Fitting Poisson log")
-    results = sm.GLM(
-        y,
-        additive_basis,
-        exposure=exposure,
-        family=sm.families.Poisson(),
-    ).fit()
-    results.save("results/poisson_log_model.pkl")
-    data["poisson_log"] = results.predict(additive_basis)
-    data.to_csv("results/plant_predictions.csv")
+    print("Fitting null NB model")
+    model = fit_model(y, null_basis, exposure)
+    model.save("results/null_model.pkl")
 
     print("Fitting NB linear")
+    data = pd.DataFrame({"obs_mean": plant_data["obs_mean"]})
     results = fit_model_linear(y, additive_basis, exposure)
+    data["nb_linear"] = results.predict(additive_basis)
     results.save("results/model.nb_linear.pkl")
 
     print("Fitting NB log")
     results = fit_model(y, additive_basis, exposure)
+
     data["nb_log"] = results.predict(additive_basis)
     results.save("results/model.nb_log.pkl")
-
-    print("Fitting null model")
-    model = fit_model(y, null_basis, exposure)
-    model.save("results/null_model.pkl")
-
-    print("Fitting saturated NB model")
-    model = fit_model(y, saturated_basis, exposure)
-    model.save("results/saturated_model.pkl")
+    data.to_csv("results/plant_predictions.csv")
 
     print("Fitting saturated Poisson model")
     results = sm.GLM(
@@ -131,6 +112,11 @@ if __name__ == "__main__":
     ).fit()
     results.save("results/saturated_poisson.pkl")
 
+    print("Fitting saturated NB model")
+    model = fit_model(y, saturated_basis, exposure)
+    model.save("results/saturated_model.pkl")
+
+    print("Fitting additive and pairwise NB models")
     subsets = {
         "additive": additive_basis,
         "pairwise": pairwise_basis,
@@ -152,11 +138,14 @@ if __name__ == "__main__":
 
         # Leave season out fitting
         for season in SEASONS:
-            train = (plant_data["Season"] != season).values
+            test = (plant_data["Season"] == season).values
+            train = ~test
             print(
                 "\t\tLeaving out season: {} ({} data points)".format(
                     season, train.sum()
                 )
             )
-            model = fit_model(y[train], X.loc[train, :], exposure[train])
+            x = X.loc[train, :]
+            x = x.loc[:, np.any(x != 0, axis=0)]
+            model = fit_model(y[train], x, exposure[train])
             model.save("results/{}_model.{}.pkl".format(label, season))

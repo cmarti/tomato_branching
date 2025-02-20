@@ -12,8 +12,11 @@ if __name__ == "__main__":
     # Load data
     print("Plotting effects of mutations across backgrounds")
     gt_data = pd.read_csv("results/genotype_predictions.csv", index_col=0)
-    stderr = (gt_data["saturated_upper"] - gt_data["saturated_lower"]) / 2
-    gt_data = gt_data.loc[stderr < 10, :]
+    deviance = pd.read_csv("results/models.deviance.csv", index_col=0)
+    gt_data = gt_data.loc[
+        (gt_data["saturated_upper"] - gt_data["saturated_lower"]) < np.log(1e3),
+        :,
+    ]
     seasons = gt_data["Season"].values
     gt_data = np.exp(gt_data.iloc[:, 8:])
 
@@ -25,8 +28,9 @@ if __name__ == "__main__":
     )
 
     cols = ["saturated_lower", "saturated_upper"]
-    x = gt_data["multilinear_pred"]
+    x = gt_data["hierarchical_pred"]
     y = gt_data["saturated_pred"]
+
     r2 = pearsonr(np.log(x), np.log(y))[0] ** 2
     dy = np.abs(gt_data[cols].T - y)
     color = "black"
@@ -44,7 +48,10 @@ if __name__ == "__main__":
     axes.text(
         0.05,
         0.95,
-        "R$^2$=" + "{:.2f}".format(r2),
+        "Deviance explained\n={:.2f}%".format(
+            deviance.loc["hierarchical model", "deviance"]
+        ),
+        # "R$^2$=" + "{:.2f}".format(r2),
         transform=axes.transAxes,
         ha="left",
         va="top",

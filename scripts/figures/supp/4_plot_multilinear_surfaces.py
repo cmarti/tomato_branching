@@ -8,7 +8,7 @@ from matplotlib.gridspec import GridSpec
 from scipy.stats import pearsonr
 from scripts.settings import FIG_WIDTH
 from scripts.utils import set_aspect
-from scripts.models.multilinear_model import MultilinearModel
+from scripts.models.hierarchical_model import HierarchicalModel
 
 
 def plot(df, axes, x, y, color="black", alpha=1, label=None):
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     plt.rcParams["ytick.labelsize"] = 6
 
     # Load data
-    print("Plotting effects of mutations across backgrounds")
+    print("Loading data")
     gt_data = pd.read_csv("results/genotype_predictions.csv", index_col=0)
     stderr = (gt_data["saturated_upper"] - gt_data["saturated_lower"]) / 2
     gt_data = gt_data.loc[stderr < 10, :]
@@ -63,10 +63,10 @@ if __name__ == "__main__":
     gt_data["z"] = gt_data["saturated_pred"]
 
     # df = np.exp(gt_data[["x", "y", "z"]].dropna())
-    df = gt_data[["x", "y", "z", "multilinear_pred"]].dropna()
-    print(df)
+    df = gt_data[["x", "y", "z", "hierarchical_pred"]].dropna()
 
-    model = torch.load("results/multilinear.pkl")
+    print("Loading hierarchical model")
+    model = torch.load("results/hierarchical.pkl")
     wt = model.beta[0].detach().item()
     f1 = np.log(10 ** np.linspace(-2, np.log10(25), 25))
     f2 = np.log(10 ** np.linspace(-2, np.log10(25), 25))
@@ -83,6 +83,7 @@ if __name__ == "__main__":
     # ys, xs, zs = np.exp(ys), np.exp(xs), np.exp(zs)
 
     # Init figure
+    print("Plotting surface for the multilinear layer with observations")
     fig = plt.figure(
         figsize=(FIG_WIDTH * 1.5, 0.375 * FIG_WIDTH),
     )
@@ -95,8 +96,8 @@ if __name__ == "__main__":
     ]
 
     for axes in subplots:
-        df1 = df.loc[df["z"] < df["multilinear_pred"], :]
-        df2 = df.loc[df["z"] > df["multilinear_pred"], :]
+        df1 = df.loc[df["z"] < df["hierarchical_pred"], :]
+        df2 = df.loc[df["z"] > df["hierarchical_pred"], :]
 
         axes.scatter(
             df1["y"] / np.log(10),
@@ -149,6 +150,8 @@ if __name__ == "__main__":
     #     print(f"Elevation: {axes.elev}")
     #     print(f"Azimuth: {axes.azim}")
 
+    print("Rendering")
     fname = "figures/FigureS8a".format()
     fig.savefig("{}.png".format(fname), dpi=300)
     fig.savefig("{}.svg".format(fname))
+    print("Done")

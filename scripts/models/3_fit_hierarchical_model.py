@@ -5,7 +5,7 @@ import torch
 
 from scripts.utils import get_saturated_basis
 from scripts.settings import SEASONS
-from scripts.models.multilinear_model import MultilinearModel
+from scripts.models.hierarchical_model import HierarchicalModel
 
 
 def encode_data(plant_data):
@@ -49,33 +49,33 @@ if __name__ == "__main__":
     x1, x2, y, exposure = prepare_data(plant_data)
 
     print("Training model on 100% of the data")
-    model = MultilinearModel()
+    model = HierarchicalModel()
     model.set_data(x1, x2, y, exposure)
     model.fit(n_iter=n_iter, lr=lr)
-    torch.save(model, "results/multilinear.pkl")
+    torch.save(model, "results/hierarchical.pkl")
 
-    print("\tStoring model parameters")
-    params = model.get_params()
-    params["theta1"].to_csv("results/multilinear.theta1.csv")
-    params["theta2"].to_csv("results/multilinear.theta2.csv")
+    history = pd.DataFrame({"loss": model.history})
+    history.to_csv("results/hierarchical.history.csv")
+
+    # print("\tStoring model parameters")
+    # params = model.get_params()
+    # params["theta1"].to_csv("results/hierarchical.theta1.csv")
+    # params["theta2"].to_csv("results/hierarchical.theta2.csv")
 
     print("Training model on 90% of the data")
-    model = MultilinearModel()
+    model = HierarchicalModel()
     model.set_data(
         x1.loc[train, :], x2.loc[train, :], y[train], exposure[train]
     )
     model.fit(n_iter=n_iter, lr=lr)
-    torch.save(model, "results/multilinear.train.pkl")
-
-    history = pd.DataFrame({"loss": model.history})
-    history.to_csv("results/multilinear.history.csv")
+    torch.save(model, "results/hierarchical.train.pkl")
 
     for season in SEASONS:
         print("Leaving out season: {}".format(season))
         train = (plant_data["Season"] != season).values
-        model = MultilinearModel()
+        model = HierarchicalModel()
         model.set_data(
             x1.loc[train, :], x2.loc[train, :], y[train], exposure[train]
         )
         model.fit(n_iter=n_iter, lr=lr)
-        torch.save(model, "results/multilinear.{}.pkl".format(season))
+        torch.save(model, "results/hierarchical.{}.pkl".format(season))

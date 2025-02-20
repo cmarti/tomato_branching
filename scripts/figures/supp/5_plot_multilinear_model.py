@@ -7,7 +7,7 @@ import torch
 from matplotlib.gridspec import GridSpec
 from itertools import combinations
 from scripts.settings import FIG_WIDTH
-from scripts.models.multilinear_model import MultilinearModel
+from scripts.models.hierarchical_model import HierarchicalModel
 
 
 if __name__ == "__main__":
@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     print("Plotting across paralogs interaction surface")
     axes = ax_joint
-    model = torch.load("results/multilinear.pkl")
+    model = torch.load("results/hierarchical.pkl")
     wt = model.beta[0].detach().item()
     f1 = np.log(10 ** np.linspace(-2, np.log10(30), 100))
     f2 = np.log(10 ** np.linspace(-2, np.log10(30), 100))
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         df = pred_j2.loc[idx, :]
         axes.scatter(
             df["x"],
-            np.exp(df["multilinear_pred"]),
+            np.exp(df["hierarchical_pred"]),
             c="black",
             zorder=10,
             s=7,
@@ -131,7 +131,10 @@ if __name__ == "__main__":
             if d == 1:
                 sdf = df.loc[[s1, s2], :]
                 axes.plot(
-                    sdf["x"], np.exp(sdf["multilinear_pred"]), lw=0.75, c="grey"
+                    sdf["x"],
+                    np.exp(sdf["hierarchical_pred"]),
+                    lw=0.75,
+                    c="grey",
                 )
         axes.set(
             yscale="log",
@@ -143,15 +146,15 @@ if __name__ == "__main__":
         if series != 3:
             axes.set(yticklabels=[])
         try:
-            x, y = df.loc["WM{}".format(allele), ["x", "multilinear_pred"]]
+            x, y = df.loc["WM{}".format(allele), ["x", "hierarchical_pred"]]
             axes.text(
                 x + 0.1, np.exp(y), label, va="top", ha="left", fontsize=6
             )
         except KeyError:
             pass
-        x, y = df.loc["MW", ["x", "multilinear_pred"]]
+        x, y = df.loc["MW", ["x", "hierarchical_pred"]]
         axes.text(x, np.exp(y), "$j2$", va="bottom", ha="right", fontsize=6)
-        x, y = df.loc["MM{}".format(allele), ["x", "multilinear_pred"]]
+        x, y = df.loc["MM{}".format(allele), ["x", "hierarchical_pred"]]
         axes.text(
             x, np.exp(y), label + " $j2$", va="bottom", ha="right", fontsize=6
         )
@@ -186,7 +189,7 @@ if __name__ == "__main__":
         encoding[x] + encoding[y] for x, y in pred_plt[["PLT7", "PLT3"]].values
     ]
     axes.scatter(
-        np.exp(pred_plt["multilinear_pred"]),
+        np.exp(pred_plt["hierarchical_pred"]),
         pred_plt["x"],
         c="black",
         zorder=10,
@@ -200,7 +203,7 @@ if __name__ == "__main__":
         if d == 1:
             df = pred_plt.loc[[s1, s2], :]
             axes.plot(
-                np.exp(df["multilinear_pred"]), df["x"], lw=0.75, c="grey"
+                np.exp(df["hierarchical_pred"]), df["x"], lw=0.75, c="grey"
             )
     axes.set(
         xscale="log",
@@ -212,15 +215,15 @@ if __name__ == "__main__":
         xlabel="branching events in\n$EJ2\ J2$ background",
     )
 
-    x, y = pred_plt.loc["WM", ["x", "multilinear_pred"]]
+    x, y = pred_plt.loc["WM", ["x", "hierarchical_pred"]]
     axes.text(np.exp(y), x, "$plt7$", va="bottom", ha="right", fontsize=6)
-    x, y = pred_plt.loc["MW", ["x", "multilinear_pred"]]
+    x, y = pred_plt.loc["MW", ["x", "hierarchical_pred"]]
     axes.text(np.exp(y), x, "$plt3$", va="top", ha="left", fontsize=6)
-    x, y = pred_plt.loc["HM", ["x", "multilinear_pred"]]
+    x, y = pred_plt.loc["HM", ["x", "hierarchical_pred"]]
     axes.text(
         np.exp(y), x, "$plt3/+\ plt7$", va="bottom", ha="right", fontsize=6
     )
-    x, y = pred_plt.loc["MH", ["x", "multilinear_pred"]]
+    x, y = pred_plt.loc["MH", ["x", "hierarchical_pred"]]
     axes.text(
         np.exp(y), x, "$plt3\ plt7/+$", va="bottom", ha="center", fontsize=6
     )
