@@ -33,7 +33,7 @@ if __name__ == "__main__":
         2,
         3,
         # figsize=(0.725 * FIG_WIDTH, 0.475 * FIG_WIDTH),
-        figsize=(0.775 * FIG_WIDTH, 0.5 * FIG_WIDTH),
+        figsize=(0.775 * FIG_WIDTH, 0.55 * FIG_WIDTH),
         sharex=False,
         sharey=True,
     )
