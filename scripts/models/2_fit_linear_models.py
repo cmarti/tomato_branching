@@ -85,6 +85,7 @@ if __name__ == "__main__":
         np.ones((y.shape[0], 1)), index=additive_basis.index
     )
     saturated_basis = get_saturated_basis(plant_data)
+    pairwise_basis.join(plant_data[['gt']]).to_csv('results/pairwise_basis.csv')
 
     print("Fitting null NB model")
     model = fit_model(y, null_basis, exposure)
