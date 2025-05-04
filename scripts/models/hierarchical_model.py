@@ -4,7 +4,6 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from torch.nn import Parameter
-from scipy.stats import pearsonr
 
 
 class NegativeBinomial(object):
@@ -28,57 +27,6 @@ class NegativeBinomial(object):
             + self.n * torch.log(self.p)
             + torch.special.xlog1py(y, -self.p)
         )
-
-
-class LinearModel(torch.nn.Module):
-    def set_data(self, X, counts, exposure, alpha=None):
-        self.X = torch.Tensor(X)
-        self.y = torch.Tensor(counts)
-        self.exposure = torch.Tensor(exposure)
-        self.init_params(n=self.X.shape[1], alpha=alpha)
-
-    def loglikelihood(self, yhat, counts, exposure):
-        mean = yhat * exposure
-        alpha = torch.exp(self.log_alpha)
-        ll = NegativeBinomial(mean, alpha).logpmf(counts).sum()
-        return ll
-
-    def x_to_mu(self, X):
-        mu = torch.exp(X @ self.theta)
-        return mu
-
-    def predict(self, X):
-        X_ = torch.Tensor(X)
-        return self.x_to_mu(X_)
-
-    def fit(self, n_iter=1000, lr=0.1):
-        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
-
-        history = []
-        pbar = tqdm(range(n_iter), desc="Optimizing log-likelihood")
-        for i in pbar:
-            optimizer.zero_grad()
-            mu = self.x_to_mu(self.X)
-            loss = -self.loglikelihood(mu, self.y, self.exposure)
-            loss.backward()
-            optimizer.step()
-
-            loss_value = loss.detach().item()
-            history.append(loss_value)
-            report_dict = {"loss": "{:.3f}".format(loss_value)}
-            pbar.set_postfix(report_dict)
-            # if i == 0:
-            #     print(history[-1])
-        self.history = history
-
-    def init_params(self, n, alpha=None):
-        if alpha is None:
-            self.log_alpha = Parameter(torch.zeros(size=(1,)))
-        else:
-            self.log_alpha = Parameter(
-                torch.Tensor(np.log([alpha])), requires_grad=False
-            )
-        self.theta = Parameter(torch.normal(torch.zeros(size=(n,))))
 
 
 class HierarchicalModel(torch.nn.Module):
@@ -144,22 +92,6 @@ class HierarchicalModel(torch.nn.Module):
         self.history = history
         self.llf = -history[-1]
 
-    def summary(self, pred=None, obs=None):
-        print("===========================")
-        print("Log-likelihood = {:.2f}".format(self.history[-1]))
-        print("======= Parameters ========")
-        for param, values in self.get_params().items():
-            print(param, values)
-
-        if pred is not None and obs is not None:
-            r1 = pearsonr(np.log(pred + 1), np.log(obs + 1))[0]
-            r2 = pearsonr(np.log(pred + 1e-2), np.log(obs + 1e-2))[0]
-            r3 = pearsonr(np.log(pred + 1e-6), np.log(obs + 1e-6))[0]
-            print("======= Predictions ========")
-            print("log(x+1e-6) Pearson r = {:.2f}".format(r3))
-            print("log(x+1e-2) Pearson r = {:.2f}".format(r2))
-            print("log(x+1) Pearson r = {:.2f}".format(r1))
-
     @property
     def theta1(self):
         theta1 = torch.zeros(self.theta1_raw.shape[0] + 1)
@@ -217,18 +149,14 @@ def encode_data(plant_data):
     plant_data["s2"] = [
         "{}{}".format(*x) for x in plant_data[["J2", "EJ2"]].values
     ]
-    # seasons = pd.DataFrame(
-    #     np.vstack([plant_data["Season"] == s for s in SEASONS[1:]]).T,
-    #     columns=SEASONS[1:],
-    # )
     cols1 = plant_data["s1"].unique()
     cols2 = plant_data["s2"].unique()
     x1 = pd.DataFrame(
         np.vstack([plant_data["s1"] == s for s in cols1]).T, columns=cols1
-    )  # .join(seasons)
+    )
     x2 = pd.DataFrame(
         np.vstack([plant_data["s2"] == s for s in cols2]).T, columns=cols2
-    )  # .join(seasons)
+    )
     return (x1, x2)
 
 
