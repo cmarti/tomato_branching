@@ -77,7 +77,6 @@ if __name__ == "__main__":
             ylim=lims,
             xlim=(-0.5, 4.5),
             title=bc_label,
-            # aspect=4,
         )
 
         if bc != "WW":
@@ -105,16 +104,10 @@ if __name__ == "__main__":
         except KeyError:
             pass
 
+    # Axes labels
     subplots[0].set(
         ylabel="branching events",
     )
-    # subplots_js[0].set(yticklabels=["", "", "$10^{-1}$", "$10^{0}$", "$10^1$"])
-    # fig.suptitle(
-    #     "MADS synergy",
-    #     x=0.4,
-    #     y=0.885,
-    #     fontsize=8,
-    # )
     fig.supxlabel(
         "Mutational distance to wild-type",
         x=0.525,
