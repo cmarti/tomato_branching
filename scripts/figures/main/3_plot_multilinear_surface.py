@@ -229,13 +229,7 @@ if __name__ == "__main__":
     )
     axes.view_init(elev=22, azim=-111)
 
-    # fig.tight_layout()
     fig.subplots_adjust(bottom=0.2, top=1, right=1)
-
-    # plt.show()
-    # print(f"Elevation: {axes.elev}")
-    # print(f"Azimuth: {axes.azim}")
-
     fname = "figures/Figure4G".format()
     fig.savefig("{}.png".format(fname), dpi=300)
     fig.savefig("{}.svg".format(fname))
