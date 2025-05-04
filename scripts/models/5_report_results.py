@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     print("\n== Reporting synergistic interactions ==")
     pairwise_basis = (
-        pd.read_csv("data/pairwise_basis.csv", index_col=0)
+        pd.read_csv("results/pairwise_basis.csv", index_col=0)
         .set_index("gt")
         .drop_duplicates()
     )
