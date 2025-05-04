@@ -25,14 +25,6 @@ if __name__ == "__main__":
     x1, x2 = encode_data(plant_data)
     cols1, cols2 = x1.columns, x2.columns
 
-    # gt_by_season = plant_data.groupby(['Season', 'genes'])['plant_id'].count().reset_index().pivot(index='genes', columns='Season', values='plant_id').fillna(0)
-    # gt_by_season.to_csv('data/gt_bt_season.csv')
-
-    # print(plant_data.loc[plant_data['plant_id'] == '22-SGZ-9.27', :])
-    # plant_data.loc[(plant_data['s1'] == 'HW') & (plant_data['s2'] == 'MW'), :].to_csv('test.csv')
-    # print(plant_data.loc[(plant_data['s1'] == 'HW') & (plant_data['s2'] == 'WH8'), :])
-    # exit()
-
     gt_data = (
         plant_data.groupby(["gt"] + cols)[["obs_mean"]]
         .mean()
