@@ -37,6 +37,18 @@ def plot(df, axes, x, y, color="black", alpha=1, label=None):
     return r2
 
 
+def add_model_label(axes, model_label):
+    axes.text(
+            0.95,
+            0.05,
+            model_label,
+            transform=axes.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=7,
+        )
+
+
 if __name__ == "__main__":
     # Load data
     print("Plotting leave-season-out and held out genotypes predictions")
@@ -47,11 +59,6 @@ if __name__ == "__main__":
     ]
     seasons = gt_data["Season"].values
     gt_data = np.exp(gt_data.iloc[:, 8:])
-
-    devs = pd.read_csv("results/model.deviance_explained.csv", index_col=0)
-    lls = devs.pivot(index="model", columns="test_data", values="ll")
-    devs = devs.pivot(index="model", columns="test_data", values="dev_perc")
-
     gt = np.array(["_".join(x.split("_")[:-1]) for x in gt_data.index])
     held_out_gts = np.load("results/held_out_gts.npy", allow_pickle=True)
     idx = np.isin(gt, held_out_gts)
@@ -65,62 +72,31 @@ if __name__ == "__main__":
     models = ["additive", "pairwise", "hierarchical"]
     labels = {}
     for model, row in zip(models, subplots):
+        
+        # Plot held-out genotypes
         r2s = []
         model_label = labels.get(model, model).capitalize()
         for season, axes in zip(SEASONS, row):
             df = gt_data.loc[seasons == season, :]
             r2 = plot(df, axes, model, "saturated")
             r2s.append(r2)
-            axes.text(
-                0.95,
-                0.05,
-                model_label,
-                transform=axes.transAxes,
-                ha="right",
-                va="bottom",
-                fontsize=7,
-            )
-            # axes.text(
-            #     0.05,
-            #     0.95,
-            #     "DE={:.2f}%".format(devs.loc[model, season]),
-            #     transform=axes.transAxes,
-            #     ha="left",
-            #     va="top",
-            #     fontsize=7,
-            # )
-        print(
-            "\t{} average leave-season-out r2 = {:.2f}".format(
-                model_label, np.mean(r2s)
-            )
-        )
+            add_model_label(axes, model_label)
+            
+        msg = "\t{} average leave-season-out r2 = {:.2f}"
+        print(msg.format(model_label, np.mean(r2s)))
 
+        # Plot held-out genotypes
         axes = row[-1]
         df = gt_data.loc[idx, :]
         plot(df, axes, "{}_train".format(model), "saturated")
-        axes.text(
-            0.95,
-            0.05,
-            model_label,
-            transform=axes.transAxes,
-            ha="right",
-            va="bottom",
-            fontsize=7,
-        )
-        # axes.text(
-        #     0.05,
-        #     0.95,
-        #     "DE={:.2f}%".format(devs.loc[model, "test"]),
-        #     transform=axes.transAxes,
-        #     ha="left",
-        #     va="top",
-        #     fontsize=7,
-        # )
+        add_model_label(axes, model_label)
 
-    subplots[0][-1].set_title("10% genotypes")
+    # Add titles
     for axes, season in zip(subplots[0], SEASONS):
         axes.set(title=season)
+    subplots[0][-1].set_title("10% genotypes")
 
+    # Add axes labels
     fig.supxlabel("Predicted branching events", fontsize=8, x=0.55, y=0.04)
     fig.supylabel(
         "Estimated branching events in held out data",
