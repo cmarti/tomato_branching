@@ -46,10 +46,10 @@ pip install -r requirements.txt
 
 ### Execution
 
-For reproducing the complete analysis, the bash script  `run.sh` runs all the scripts in the specified order.
+For reproducing the complete analysis, the bash script  `run_all.sh` runs all the scripts in the specified order.
 
 ```bash
-bash run.sh
+bash run_all.sh
 ```
 
 However, each script can be run independently by leveraging the preprocessed files that we provide in the `data` and `results` folders
