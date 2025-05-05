@@ -45,52 +45,19 @@ class HierarchicalModel(torch.nn.Module):
         self.log_alpha = Parameter(torch.zeros(size=(1,)))
         self.theta1_raw = Parameter(torch.normal(torch.zeros(size=(n1 - 1,))))
         self.theta2_raw = Parameter(torch.normal(torch.zeros(size=(n2 - 1,))))
-        self.beta = Parameter(torch.normal(torch.zeros(size=(2,))))
+        self.theta_wt = Parameter(torch.normal(torch.zeros(size=(1,))))
+        self.log_theta_int = Parameter(torch.normal(torch.zeros(size=(1,))))
         self.n_params = n1 + n2 + 1
 
-    def loglikelihood(self, yhat, counts, exposure):
+        print(self.log_alpha, self.log_theta_int, self.theta_wt)
+        print(self.theta1_raw)
+        print(self.theta2_raw)
+
+    def calc_loglikelihood(self, yhat, counts, exposure):
         mean = yhat * exposure
         alpha = torch.exp(self.log_alpha)
         ll = NegativeBinomial(mean, alpha).logpmf(counts).sum()
         return ll
-
-    def bilinear_function(self, f1, f2, beta):
-        b0 = beta[0]
-        b = torch.exp(beta[1:])
-        return b0 + f1 + f2 - b[-1] * f1 * f2
-
-    def x_to_mu(self, x1, x2):
-        f1 = self.calc_f(x1, self.theta1)
-        f2 = self.calc_f(x2, self.theta2)
-        log_mu = self.bilinear_function(f1, f2, self.beta)
-        mu = torch.exp(log_mu)
-        return mu
-
-    def predict(self, x1, x2):
-        x1_ = torch.Tensor(x1.values)
-        x2_ = torch.Tensor(x2.values)
-        return self.x_to_mu(x1_, x2_)
-
-    def fit(self, n_iter=1000, lr=0.1):
-        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
-
-        history = []
-        pbar = tqdm(range(n_iter), desc="Optimizing log-likelihood")
-        for i in pbar:
-            optimizer.zero_grad()
-            mu = self.x_to_mu(self.x1, self.x2)
-            loss = -self.loglikelihood(mu, self.y, self.exposure)
-            loss.backward()
-            optimizer.step()
-
-            loss_value = loss.detach().item()
-            history.append(loss_value)
-            report_dict = {"loss": "{:.3f}".format(loss_value)}
-            pbar.set_postfix(report_dict)
-            # if i == 0:
-            #     print(history[-1])
-        self.history = history
-        self.llf = -history[-1]
 
     @property
     def theta1(self):
@@ -104,42 +71,40 @@ class HierarchicalModel(torch.nn.Module):
         theta2[1:] = self.theta2_raw
         return theta2
 
-    def calc_f(self, x, theta):
+    def calc_phi(self, x, theta):
         return x @ theta
 
-    def get_params(self):
-        theta1 = pd.DataFrame(
-            {
-                "param": self.theta1.detach().numpy(),
-                "v1": self.bilinear_function(self.theta1, -1.0, self.beta)
-                .detach()
-                .numpy(),
-                "v2": self.bilinear_function(self.theta1, 1.0, self.beta)
-                .detach()
-                .numpy(),
-            },
-            index=self.cols1,
-        )
-        theta2 = pd.DataFrame(
-            {
-                "param": self.theta2.detach().numpy(),
-                "v1": self.bilinear_function(-1.0, self.theta2, self.beta)
-                .detach()
-                .numpy(),
-                "v2": self.bilinear_function(1.0, self.theta2, self.beta)
-                .detach()
-                .numpy(),
-            },
-            index=self.cols2,
-        )
+    def calc_multilinear_function(self, phi1, phi2):
+        theta_int = torch.exp(self.log_theta_int)
+        return self.theta_wt + phi1 + phi2 - theta_int * phi1 * phi2
 
-        params = {
-            "alpha": np.exp(self.log_alpha.detach().numpy()[0]),
-            "beta": self.beta.detach().numpy(),
-            "theta1": theta1,
-            "theta2": theta2,
-        }
-        return params
+    def x_to_mu(self, x1, x2):
+        phi1 = self.calc_phi(x1, self.theta1)
+        phi2 = self.calc_phi(x2, self.theta2)
+        log_mu = self.calc_multilinear_function(phi1, phi2)
+        mu = torch.exp(log_mu)
+        return mu
+
+    def predict(self, x1, x2):
+        x1_ = torch.Tensor(x1.values)
+        x2_ = torch.Tensor(x2.values)
+        return self.x_to_mu(x1_, x2_)
+
+    def fit(self, n_iter=1000, lr=0.1):
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr, maximize=True)
+
+        self.history = []
+        pbar = tqdm(range(n_iter), desc="Optimizing log-likelihood")
+        for i in pbar:
+            optimizer.zero_grad()
+            mu = self.x_to_mu(self.x1, self.x2)
+            ll = self.calc_loglikelihood(mu, self.y, self.exposure)
+            ll.backward()
+            optimizer.step()
+
+            self.llf = ll.detach().item()
+            self.history.append(self.llf)
+            pbar.set_postfix({"ll": "{:.3f}".format(self.llf)})
 
 
 def encode_data(plant_data):

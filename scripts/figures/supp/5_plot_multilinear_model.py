@@ -2,12 +2,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
 
 from matplotlib.gridspec import GridSpec
 from itertools import combinations
 from scripts.settings import FIG_WIDTH
-from scripts.models.hierarchical_model import HierarchicalModel
 
 
 if __name__ == "__main__":
@@ -34,24 +32,18 @@ if __name__ == "__main__":
 
     print("Plotting across paralogs interaction surface")
     axes = ax_joint
-    model = torch.load("results/hierarchical.pkl")
-    wt = model.beta[0].detach().item()
-    f1 = np.log(10 ** np.linspace(-2, np.log10(30), 100))
-    f2 = np.log(10 ** np.linspace(-2, np.log10(30), 100))
+    xs = np.load("results/multilinear.dense.xs.npy")
+    ys = np.load("results/multilinear.dense.ys.npy")
+    zs = np.load("results/multilinear.dense.zs.npy")
 
-    x, y = np.meshgrid(f1 - wt, f2 - wt)
-    z = (
-        model.bilinear_function(torch.Tensor(x), torch.Tensor(y), model.beta)
-        .detach()
-        .numpy()
-    )
-    x, y = np.meshgrid(f1, f2)
-    z = z / np.log(10)
+    xs = np.exp(xs)
+    ys = np.exp(ys)
+    zs = zs / np.log(10)
 
     im = axes.contourf(
-        np.exp(x),
-        np.exp(y),
-        z,
+        xs,
+        ys,
+        zs,
         cmap="Blues",
         levels=200,
         vmin=-2,
@@ -62,11 +54,11 @@ if __name__ == "__main__":
         antialiased=False,
     )
     cs = axes.contour(
-        np.exp(x),
-        np.exp(y),
-        z,
+        xs,
+        ys,
+        zs,
         colors="white",
-        levels=15,  # [-1.5, -1, -0.5, 0.0, 0.5, 1, 1.5],
+        levels=15,
         vmin=0.5,
         linewidths=0.5,
         linestyles="dashed",
@@ -77,7 +69,6 @@ if __name__ == "__main__":
         xscale="log",
         xlabel="",
         ylabel="",
-        # aspect="equal",
         xlim=lims,
         ylim=lims,
         yticklabels=[],
@@ -141,7 +132,6 @@ if __name__ == "__main__":
             xticks=[0, 1, 2, 3, 4],
             ylim=lims,
             xlim=(-0.5, 4.5),
-            # aspect=4,
         )
         if series != 3:
             axes.set(yticklabels=[])
@@ -207,11 +197,9 @@ if __name__ == "__main__":
             )
     axes.set(
         xscale="log",
-        # ylabel="Hamming distance\nto $PLT3\ PLT7$",
         yticks=[0, 1, 2, 3, 4],
         xlim=lims,
         ylim=(-0.5, 4.5),
-        # aspect=0.25,
         xlabel="branching events in\n$EJ2\ J2$ background",
     )
 

@@ -2,13 +2,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
 
 from matplotlib.gridspec import GridSpec
 from scipy.stats import pearsonr
 from scripts.settings import FIG_WIDTH
 from scripts.utils import set_aspect
-from scripts.models.hierarchical_model import HierarchicalModel
 
 
 def plot(df, axes, x, y, color="black", alpha=1, label=None):
@@ -66,21 +64,12 @@ if __name__ == "__main__":
     df = gt_data[["x", "y", "z", "hierarchical_pred"]].dropna()
 
     print("Loading hierarchical model")
-    model = torch.load("results/hierarchical.pkl")
-    wt = model.beta[0].detach().item()
-    f1 = np.log(10 ** np.linspace(-2, np.log10(25), 25))
-    f2 = np.log(10 ** np.linspace(-2, np.log10(25), 25))
-    xs, ys = np.meshgrid(f1 - wt, f2 - wt)
-    zs = (
-        model.bilinear_function(torch.Tensor(xs), torch.Tensor(ys), model.beta)
-        .detach()
-        .numpy()
-    )
-    xs, ys = np.meshgrid(f1, f2)
+    xs = np.load("results/multilinear.xs.npy")
+    ys = np.load("results/multilinear.ys.npy")
+    zs = np.load("results/multilinear.zs.npy")
+
     xs = xs / np.log(10)
     ys = ys / np.log(10)
-    # zs = zs  / np.log(10)
-    # ys, xs, zs = np.exp(ys), np.exp(xs), np.exp(zs)
 
     # Init figure
     print("Plotting surface for the multilinear layer with observations")
@@ -139,16 +128,7 @@ if __name__ == "__main__":
     subplots[1].view_init(elev=21, azim=-103)
     subplots[0].view_init(elev=26, azim=120)
 
-    # axes.xaxis.set_major_locator(LogLocator(base=10.0))
-    # axes.xaxis.set_major_formatter(LogFormatter(base=10.0))
-
-    # fig.tight_layout()
     fig.subplots_adjust(wspace=0.5)
-    # plt.show()
-
-    # for axes in subplots:
-    #     print(f"Elevation: {axes.elev}")
-    #     print(f"Azimuth: {axes.azim}")
 
     print("Rendering")
     fname = "figures/FigureS8a".format()

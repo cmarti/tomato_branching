@@ -179,7 +179,7 @@ if __name__ == "__main__":
     )
     y = torch.Tensor(test_plant_data["branches"].values)
     exposure = torch.Tensor(test_plant_data["influorescences"].values)
-    ll = model.loglikelihood(yhat, counts=y, exposure=exposure).item()
+    ll = model.calc_loglikelihood(yhat, counts=y, exposure=exposure).item()
 
     null_deviance = calc_deviance(null_test_ll, saturated_test_ll)
     deviance = calc_deviance(ll, saturated_test_ll)
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         y = torch.Tensor(season_data["branches"].values)
         exposure = torch.Tensor(season_data["influorescences"].values)
 
-        ll = model.loglikelihood(yhat, counts=y, exposure=exposure).item()
+        ll = model.calc_loglikelihood(yhat, counts=y, exposure=exposure).item()
 
         null_season_model = load_pickle(
             "results/null_model.{}.pkl".format(season)
