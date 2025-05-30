@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import numpy as np
 import pandas as pd
 
 from scripts.settings import EJ2_SERIES
@@ -69,6 +70,7 @@ if __name__ == "__main__":
     data = data.loc[data["EJ2"] != "He", :]
     data = data.loc[data["EJ2"] != "Ms", :]
     data = data.loc[data["EJ2 Allele"] != "e", :]
+    print('Total inflorescences: {}'.format(data.shape[0]))
 
     # Summarize per plant
     plant_data = (
@@ -102,6 +104,18 @@ if __name__ == "__main__":
 
     # Save output
     plant_data.to_csv("data/plant_data.csv")
+    df = plant_data.groupby(
+            [
+                "EJ2",
+                "J2",
+                "PLT3",
+                "PLT7",
+                "Season",
+            ]
+        )['obs_mean'].count()
+    qs = np.percentile(df.values, [2.5, 5, 25, 50, 75, 95, 97.5])
+    print('Number of plants per genotype percentiles: {}'.format(qs))
+    print('Total plants: {}'.format(plant_data.shape[0]))
 
     # Summarize per genotype
     gt_data = (
@@ -127,3 +141,4 @@ if __name__ == "__main__":
         "variance",
     ]
     gt_data.to_csv("data/gt_data.csv")
+    print('Total genotype-seasons: {}'.format(gt_data.shape[0]))
