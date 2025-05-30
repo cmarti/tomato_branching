@@ -19,7 +19,7 @@ LIMS = (0.0025, 150)
 
 # Fonts
 plt.rcParams["font.family"] = "Arial"
-plt.rcParams["axes.titlesize"] = 8
+plt.rcParams["axes.titlesize"] = 7.4
 plt.rcParams["axes.labelsize"] = 6
 plt.rcParams["xtick.labelsize"] = 5
 plt.rcParams["ytick.labelsize"] = 5
