@@ -20,13 +20,16 @@ LIMS = (0.0025, 150)
 # Fonts
 plt.rcParams["font.family"] = "Arial"
 plt.rcParams["axes.titlesize"] = 8
-plt.rcParams["axes.labelsize"] = 7
-plt.rcParams["xtick.labelsize"] = 7
-plt.rcParams["ytick.labelsize"] = 7
-plt.rcParams["legend.fontsize"] = 6
+plt.rcParams["axes.labelsize"] = 6
+plt.rcParams["xtick.labelsize"] = 5
+plt.rcParams["ytick.labelsize"] = 5
+plt.rcParams["legend.fontsize"] = 5
 plt.rcParams["legend.labelspacing"] = 0.1
 
 plt.rcParams["axes.titlepad"] = 3
+plt.rcParams['axes.labelpad'] = 2
+plt.rcParams['xtick.major.pad'] = 1.5
+plt.rcParams['ytick.major.pad'] = 1.5
 
 # Linewidths
 plt.rcParams["axes.linewidth"] = 0.5
