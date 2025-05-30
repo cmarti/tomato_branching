@@ -77,7 +77,7 @@ if __name__ == "__main__":
     np.save("results/train_idx.npy", train_idx)
     y = plant_data["branches"]
     exposure = plant_data["influorescences"].values
-
+    
     print("Constructing basis for regression")
     additive_basis = get_add_basis(plant_data)
     pairwise_basis = get_pairwise_basis(plant_data).drop("PLT3_PLT7", axis=1)
@@ -87,9 +87,20 @@ if __name__ == "__main__":
     saturated_basis = get_saturated_basis(plant_data)
     pairwise_basis.join(plant_data[['gt']]).to_csv('results/pairwise_basis.csv')
 
+    test_y = y[~train_idx]
+    test_saturated_basis = get_saturated_basis(plant_data.loc[~train_idx, :])
+    test_null_basis = null_basis.loc[~train_idx, :]
+    test_exposure = exposure[~train_idx]
+
     print("Fitting null NB model")
     model = fit_model(y, null_basis, exposure)
     model.save("results/null_model.pkl")
+    
+    print("Fitting null NB model on test data")
+    model = fit_model(test_y,
+                      test_null_basis.values,
+                      test_exposure)
+    model.save("results/saturated_model.test.pkl")
 
     print("Fitting NB linear")
     data = pd.DataFrame({"obs_mean": plant_data["obs_mean"]})
@@ -116,9 +127,16 @@ if __name__ == "__main__":
     print("Fitting saturated NB model")
     model = fit_model(y, saturated_basis, exposure)
     model.save("results/saturated_model.pkl")
+    
+    print("Fitting saturated NB model on test data")
+    model = fit_model(test_y,
+                      test_saturated_basis.values,
+                      test_exposure)
+    model.save("results/saturated_model.test.pkl")
 
     print("Fitting additive and pairwise NB models")
     subsets = {
+        "null": null_basis,
         "additive": additive_basis,
         "pairwise": pairwise_basis,
     }
@@ -150,3 +168,13 @@ if __name__ == "__main__":
             x = x.loc[:, np.any(x != 0, axis=0)]
             model = fit_model(y[train], x, exposure[train])
             model.save("results/{}_model.{}.pkl".format(label, season))
+            
+            if label == 'null':
+                x = X.loc[test, :]
+                x = x.loc[:, np.any(x != 0, axis=0)]
+                model = fit_model(y[test], x, exposure[test])
+                model.save("results/{}_model.test.{}.pkl".format(label, season))
+                
+                x = get_saturated_basis(plant_data.loc[test, :])
+                model = fit_model(y[test], x.values, exposure[test])
+                model.save("results/saturated_model.test.{}.pkl".format(season))
