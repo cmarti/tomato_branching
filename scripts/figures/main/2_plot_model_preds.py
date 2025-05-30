@@ -24,7 +24,7 @@ if __name__ == "__main__":
     fig, axes = plt.subplots(
         1,
         1,
-        figsize=(FIG_WIDTH * 0.3, 0.3 * FIG_WIDTH),
+        figsize=(FIG_WIDTH * 0.275, 0.275 * FIG_WIDTH),
     )
 
     cols = ["saturated_lower", "saturated_upper"]
@@ -48,14 +48,14 @@ if __name__ == "__main__":
     axes.text(
         0.05,
         0.95,
-        "Deviance explained\n={:.2f}%".format(
+        "Deviance explained={:.2f}%".format(
             deviance.loc["hierarchical model", "deviance"]
         ),
         # "R$^2$=" + "{:.2f}".format(r2),
         transform=axes.transAxes,
         ha="left",
         va="top",
-        fontsize=7,
+        fontsize=5,
     )
     set_aspect(axes)
 

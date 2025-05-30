@@ -38,13 +38,13 @@ def plot_epistatic_square(axes, pred, gts, labels, dx2=-0.2, dx3=-0.2):
     axes.scatter(x[-1], expected, c="grey", s=7, lw=0.2, edgecolor="white")
 
     axes.text(
-        x[1] + 0.2, y[1] * 0.9, labels[1], va="top", ha="left", fontsize=6
+        x[1] + 0.2, y[1] * 0.9, labels[1], va="top", ha="left", fontsize=5
     )
     axes.text(
-        x[2] + dx2, y[2] * 1.1, labels[2], va="bottom", ha="right", fontsize=6
+        x[2] + dx2, y[2] * 1.1, labels[2], va="bottom", ha="right", fontsize=5
     )
     axes.text(
-        x[3] + dx3, y[3] * 1.1, labels[3], va="bottom", ha="left", fontsize=6
+        x[3] + dx3, y[3] * 1.1, labels[3], va="bottom", ha="left", fontsize=5
     )
 
     axes.set(
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     fig, subplots = plt.subplots(
         2,
         2,
-        figsize=(FIG_WIDTH * 0.4, 0.4 * FIG_WIDTH),
+        figsize=(FIG_WIDTH * 0.33, 0.33 * FIG_WIDTH),
         sharex=True,
         sharey=True,
     )
