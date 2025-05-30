@@ -49,6 +49,7 @@ pip install -r requirements.txt
 For reproducing the complete analysis, the bash script  `run_all.sh` runs all the scripts in the specified order.
 
 ```bash
+source activate.sh # add repository to PYTHONPATH
 bash run_all.sh
 ```
 
