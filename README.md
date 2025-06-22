@@ -2,7 +2,7 @@
 
 This repository contains the code and data necessary to reproduce the analses and figures presented in the following publication in which we study the genetic architecture of inflorescence branching in tomato by combining genetic perturbations of two pairs of paralog genes in a gene regulatory network. 
 
-- Sophia G. Zebell, Carlos Martí-Gómez, Blaine Fitzgerald, Camila Pinto Da Cunha, Michael Lach, Brooke M. Seman, Anat Hendelman, Simon Sretnovic, Madelaine Bartlett, Yiping Qi, Yuval Eshed, David M. McCandlish*, Zachary B. Lippman (2025). Cryptic variation in a plant regulatory network fuels phenotypic change through hierarchical epistasis. [https://doi.org/10.1101/2025.02.23.639722](https://doi.org/10.1101/2025.02.23.639722 )
+- Sophia G. Zebell, Carlos Martí-Gómez, Blaine Fitzgerald, Camila Pinto Da Cunha, Michael Lach, Brooke M. Seman, Anat Hendelman, Simon Sretnovic, Madelaine Bartlett, Yiping Qi, Yuval Eshed, David M. McCandlish, Zachary B. Lippman (2025). Cryptic variation in a plant regulatory network fuels phenotypic change through hierarchical epistasis. Nature [https://doi.org/10.1038/s41586-025-09243-0](https://doi.org/10.1038/s41586-025-09243-0)
 
 ### Requirements
 
